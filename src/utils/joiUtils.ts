@@ -8,7 +8,8 @@ const joiUtils: any = {
 		type: 'string',
 		base: joi.string(),
 		messages: {
-			'string.objectId': '{{#label}} must be a valid id'
+			'string.objectId': '{{#label}} must be a valid id',
+			'string.password': Constants.RESPONSE_MESSAGES.PASSWORD_VALIDATION_FAILED
 		},
 		rules: {
 			mongoId: {
@@ -22,7 +23,7 @@ const joiUtils: any = {
 			password: {
 				validate(value: any, helpers: any) {
 					if (!Constants.REGEX.PASSWORD.test(value)) {
-						return helpers.error(Constants.RESPONSE_MESSAGES.PASSWORD_VALIDATION_FAILED);
+						return helpers.error('string.password');
 					}
 					return value;
 				}

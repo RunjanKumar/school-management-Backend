@@ -10,6 +10,10 @@ export default async function runMigrations() {
 	const dbVersion = await Models.dbVersionModel.findOne({});
 
 	if (!dbVersion) {
+		if (!CONFIG.ADMIN_CRED.NAME || !CONFIG.ADMIN_CRED.EMAIL || !CONFIG.ADMIN_CRED.PASSWORD) {
+			throw new Error('ADMIN_NAME, ADMIN_EMAIL and ADMIN_PASSWORD are required for the initial admin migration.');
+		}
+
 		await Models.adminModel.create({
 			name: CONFIG.ADMIN_CRED.NAME,
 			email: CONFIG.ADMIN_CRED.EMAIL,

@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import { Constants } from '../commons/constants';
 import mongoose from 'mongoose';
 import { SignedToken } from '../commons/interfaces';
+import config from '../config';
 
 /**
  * Replaces all occurrences of specified substrings in a string with their corresponding replacements.
@@ -66,6 +67,13 @@ const compareOTP = async (otp: number, hashedOtp: string): Promise<boolean> => {
 	return await bcrypt.compare(otp.toString(), hashedOtp);
 };
 
+const getJwtSecret = (): string => {
+	if (!config.JWT_SECRET) {
+		throw new Error('JWT_SECRET environment variable is required.');
+	}
+	return config.JWT_SECRET;
+};
+
 /**
  * Generates a JSON Web Token (JWT) for a given user ID.
  *
@@ -82,7 +90,7 @@ const generateJWTToken = (userId: string, expirationTime: number): SignedToken =
 		sessionKey // special session key to maintain session
 	};
 
-	return { sessionKey, token: jwt.sign(payload, process.env.JWT_SECRET || 'secret', { expiresIn: expirationTime }) };
+	return { sessionKey, token: jwt.sign(payload, getJwtSecret(), { expiresIn: expirationTime }) };
 };
 
 /**
@@ -97,7 +105,7 @@ const generateSecuredToken = (field: string): string => {
 		field: field
 	};
 
-	return jwt.sign(payload, process.env.JWT_SECRET || 'secret', { expiresIn: '1h' });
+	return jwt.sign(payload, getJwtSecret(), { expiresIn: '1h' });
 };
 
 /**
@@ -108,7 +116,7 @@ const generateSecuredToken = (field: string): string => {
  * @throws An error if the token is invalid or verification fails.
  */
 const decryptJWTToken = (token: string): any => {
-	return jwt.verify(token, process.env.JWT_SECRET || ('secret' as string));
+	return jwt.verify(token, getJwtSecret());
 };
 
 /**

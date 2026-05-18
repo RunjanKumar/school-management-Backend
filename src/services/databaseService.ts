@@ -8,7 +8,7 @@ interface DbService {
 	findOne: <T extends Document>(model: Model<T>, criteria: FilterQuery<T>, projection?: ProjectionType<T>) => Promise<T | null>;
 	findOneWithSort: <T extends Document>(model: Model<T>, criteria: FilterQuery<T>, projection?: ProjectionType<T>, sort?: any) => Promise<T | null>;
 	findOneAndUpdate: <T extends Document>(model: Model<T>, criteria: FilterQuery<T>, dataToUpdate: UpdateQuery<T>, options?: QueryOptions) => Promise<T | null>;
-	updateOne: <T extends Document>(model: Model<T>, criteria: FilterQuery<T>, payload: UpdateQuery<T>, options?: QueryOptions<T>) => Promise<T | null>;
+	updateOne: <T extends Document>(model: Model<T>, criteria: FilterQuery<T>, payload: UpdateQuery<T>, options?: any) => Promise<boolean>;
 	updateMany: <T extends Document>(model: Model<T>, criteria: FilterQuery<T>, dataToUpdate: UpdateQuery<T>) => Promise<void>;
 	deleteOne: <T extends Document>(model: Model<T>, criteria: FilterQuery<T>) => Promise<boolean>;
 	findOneAndDelete: <T extends Document>(model: Model<T>, criteria: FilterQuery<T>) => Promise<T | null>;
@@ -43,8 +43,9 @@ const dbService: DbService = {
 		return (await model.findOne(criteria, projection).sort(sort).lean()) as T | null;
 	},
 
-	updateOne: async <T extends Document>(model: Model<T>, criteria: FilterQuery<T>, payload: Partial<T>, options?: QueryOptions<T>): Promise<T | null> => {
-		return (await model.updateOne(criteria, payload).lean()) as unknown as T | null;
+	updateOne: async <T extends Document>(model: Model<T>, criteria: FilterQuery<T>, payload: UpdateQuery<T>, options?: any): Promise<boolean> => {
+		const result = await model.updateOne(criteria, payload, options);
+		return result.matchedCount > 0;
 	},
 
 	findOneAndUpdate: async <T extends Document>(model: Model<T>, criteria: FilterQuery<T>, dataToUpdate: UpdateQuery<T>, options: QueryOptions = { new: true }): Promise<T | null> => {

@@ -16,7 +16,7 @@ const config: Config = {
 	JWT_SECRET: process.env.JWT_SECRET,
 
 	PROTOCOL: process.env.SERVER_PROTOCOL || 'http',
-	HOST: process.env.SERVER_HOST || '0.0.0.0',
+	HOST: process.env.SERVER_HOST || 'localhost',
 	PORT: process.env.PORT || 3000,
 	PATH_TO_UPLOAD_FILES_ON_LOCAL_SERVER: process.env.PATH_TO_UPLOAD_FILES_ON_LOCAL_SERVER || 'uploads/',
 	get SERVER_URL() {
@@ -45,12 +45,12 @@ const config: Config = {
 		PASSWORD: process.env.SWAGGER_AUTH_PASSWORD || ''
 	},
 	DB: {
-		PROTOCOL: process.env.DB_PROTOCOL || '',
-		HOST: process.env.DB_HOST || '',
-		PORT: process.env.DB_PORT,
-		NAME: process.env.DB_NAME || '',
+		PROTOCOL: process.env.DB_PROTOCOL || 'mongodb',
+		HOST: process.env.DB_HOST || '127.0.0.1',
+		PORT: process.env.DB_PORT || 27017,
+		NAME: process.env.DB_NAME || 'schoolManagement',
 		USER: process.env.DB_USER || '',
-		PASSWORD: process.env.DB_PASSWD || '',
+		PASSWORD: process.env.DB_PASSWORD || '',
 		get DATABASE_URI() {
 			return process.env.DATABASE_URI || `${this.PROTOCOL}://${this.HOST}:${this.PORT}/${this.NAME}`;
 		}

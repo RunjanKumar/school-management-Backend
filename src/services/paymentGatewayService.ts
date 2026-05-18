@@ -96,6 +96,7 @@ function generateRandomToken(): string {
  * @returns {Promise<void>} - Simulated API call
  */
 async function simulatePaymentGatewayCall(cardDetails: CardDetails): Promise<void> {
+	void cardDetails;
 	// Simulate network delay
 	await new Promise((resolve) => setTimeout(resolve, 100));
 }

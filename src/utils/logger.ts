@@ -1,3 +1,5 @@
+import { logger } from '../services/logger';
+
 export const log = (message: string): void => {
-	console.log(`[LOG]: ${message}`);
+	logger.info(`[LOG]: ${message}`);
 };

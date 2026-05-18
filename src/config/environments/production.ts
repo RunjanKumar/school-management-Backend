@@ -47,13 +47,13 @@ export default {
 		cloudfrontUrl: process.env.CLOUDFRONT_URL || 'cloudfront-url'
 	},
 	ADMIN_CRED: {
-		NAME: process.env.ADMIN_NAME || 'Admin',
-		EMAIL: process.env.ADMIN_EMAIL || 'admin@yopmail.com',
-		PASSWORD: process.env.ADMIN_PASSWORD || '123456'
+		NAME: process.env.ADMIN_NAME || '',
+		EMAIL: process.env.ADMIN_EMAIL || '',
+		PASSWORD: process.env.ADMIN_PASSWORD || ''
 	},
 	SWAGGER_AUTH: {
-		USERNAME: process.env.SWAGGER_AUTH_USERNAME || 'username',
-		PASSWORD: process.env.SWAGGER_AUTH_PASSWORD || 'password'
+		USERNAME: process.env.SWAGGER_AUTH_USERNAME || '',
+		PASSWORD: process.env.SWAGGER_AUTH_PASSWORD || ''
 	},
 	APPLE_KEYS_URL: process.env.APPLE_KEYS_URL || 'https://appleid.apple.com/auth/keys',
 	AI_BASE_URL: process.env.AI_BASE_URL || 'http://localhost:5000',

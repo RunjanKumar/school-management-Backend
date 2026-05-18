@@ -58,7 +58,7 @@ export default [
       "brace-style": ["error", "1tbs", { "allowSingleLine": true }],
       "curly": ["error", "multi-line"],
       "max-len": ["warn", { "code": 1000, "ignoreUrls": true, "ignoreStrings": true, "ignoreTemplateLiterals": true }],
-      "no-unused-vars": ["warn", { "args": "after-used", "ignoreRestSiblings": true, "varsIgnorePattern": "^_" }],
+      "no-unused-vars": "off",
       "@typescript-eslint/no-unused-vars": ["warn", { "args": "after-used", "ignoreRestSiblings": true, "varsIgnorePattern": "^_" }]
     }
   }

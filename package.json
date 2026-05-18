@@ -3,13 +3,14 @@
   "version": "1.0.0",
   "description": "Node.js + TypeScript + Express",
   "main": "dist/server.js",
-  "scripts": {
-    "start": "node dist/server.js",
-    "dev": "nodemon src/server.ts",
-    "build": "tsc -p tsconfig.json",
-    "prepare": "husky install",
-    "lint:fix": "prettier --write 'src/**/*.{ts,tsx,js,jsx,json,md}' && eslint --fix 'src/**/*.{ts,tsx}' && git add ."
-  },
+	"scripts": {
+		"start": "node dist/server.js",
+		"dev": "nodemon src/server.ts",
+		"build": "tsc -p tsconfig.json",
+		"lint": "eslint \"src/**/*.{ts,tsx,js,jsx}\"",
+		"prepare": "husky install",
+		"lint:fix": "prettier --write 'src/**/*.{ts,tsx,js,jsx,json,md}' && eslint --fix 'src/**/*.{ts,tsx}' && git add ."
+	},
   "dependencies": {
     "@types/bcrypt": "^5.0.2",
     "bcrypt": "^5.1.1",

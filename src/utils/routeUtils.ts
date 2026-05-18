@@ -12,6 +12,7 @@ import swaggerUI from 'swagger-ui-express';
 import basicAuth from 'express-basic-auth';
 import { SWAGGER } from '../config/swaggerConfig';
 import rateLimitService from '../services/rateLimitService';
+import { logger } from '../services/logger';
 
 const SWAGGER_AUTH = config.SWAGGER_AUTH;
 const uploadMiddleware = multer({
@@ -46,9 +47,12 @@ const routeUtils: any = {
 				middlewares.push(authService.validateAuth(route.auth));
 			}
 			if (route.authWebhook) {
+				if (typeof authService.webhookValidate !== 'function') {
+					throw new Error('Webhook auth middleware is not implemented.');
+				}
 				middlewares.push(authService.webhookValidate(route.authWebhook));
 			}
-			if (route.joiSchemaForSwagger.formData) {
+			if (route.joiSchemaForSwagger?.formData) {
 				const multerMiddleware: any = getMulterMiddleware(route.joiSchemaForSwagger.formData);
 				middlewares.push(multerMiddleware, multerErrorHandler);
 			}
@@ -146,7 +150,7 @@ const getHandlerMethod = (route: any) => {
 			})
 			?.catch((err: any) => {
 				if (!err.statusCode && !err.status) {
-					console.log('[INTERNAL_SERVER_ERROR]', err);
+					logger.error(`[INTERNAL_SERVER_ERROR] ${err?.stack || err}`);
 					err = createErrorResponse(Constants.RESPONSE_MESSAGES.INTERNAL_SERVER_ERROR, Constants.ERROR_TYPES.INTERNAL_SERVER_ERROR);
 				}
 				response.status(err.statusCode).json(err);
@@ -227,7 +231,7 @@ const createSwaggerUIForRoutes = async (app: any, routes: any[] = []) => {
 			swaggerUI.setup(swaggerDocument, swaggerOptions)
 		);
 	} catch (err) {
-		console.error('Error setting up Swagger UI:', err);
+		logger.error(`Error setting up Swagger UI: ${err}`);
 		throw new Error('Failed to set up Swagger UI');
 	}
 };

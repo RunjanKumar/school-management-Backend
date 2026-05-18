@@ -22,12 +22,12 @@ async function loginAdmin(payload: any) {
 	});
 
 	if (!admin) {
-		throw createErrorResponse(Constants.RESPONSE_MESSAGES.ADMIN_NOT_FOUND, Constants.ERROR_TYPES.BAD_REQUEST);
+		throw createErrorResponse(Constants.RESPONSE_MESSAGES.INVALID_EMAIL_OR_PASSWORD, Constants.ERROR_TYPES.BAD_REQUEST);
 	}
 
 	// check password
 	if (!(await Utils.comparePassword(payload.password, admin.password))) {
-		throw createErrorResponse(Constants.RESPONSE_MESSAGES.ADMIN_NOT_FOUND, Constants.ERROR_TYPES.BAD_REQUEST);
+		throw createErrorResponse(Constants.RESPONSE_MESSAGES.INVALID_EMAIL_OR_PASSWORD, Constants.ERROR_TYPES.BAD_REQUEST);
 	}
 
 	// generate token

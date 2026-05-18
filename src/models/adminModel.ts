@@ -4,7 +4,7 @@ import { AdminInterface } from '../interfaces';
 const adminSchema: Schema<AdminInterface> = new Schema(
 	{
 		name: { type: String, required: true },
-		email: { type: String, required: true },
+		email: { type: String, required: true, unique: true, lowercase: true, trim: true },
 		password: { type: String, required: true },
 		isDeleted: { type: Boolean, default: false }
 	},

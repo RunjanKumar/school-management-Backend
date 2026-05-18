@@ -6,6 +6,7 @@ import express, { Application, Request, Response, NextFunction } from 'express';
 import { routes } from '../routes/api';
 import routeUtils from '../utils/routeUtils';
 import { requestLogger } from '../middleware/requestLogger';
+import errorHandler from '../middleware/errorHandler';
 import runMigrations from '../utils/dbMigration';
 import runCrons from '../startup/cron';
 
@@ -39,6 +40,8 @@ export default async (app: Application) => {
 	app.use('/public', express.static('public'));
 
 	app.use('/uploads', express.static('uploads'));
+
+	app.use(errorHandler);
 
 	// Run migrations
 	await runMigrations();

@@ -6,6 +6,7 @@ const sessionSchema: Schema<SessionInterface> = new Schema(
 	{
 		userId: {
 			type: Schema.Types.ObjectId,
+			index: true,
 			required: true
 		},
 		refPath: {
@@ -20,10 +21,13 @@ const sessionSchema: Schema<SessionInterface> = new Schema(
 		},
 		token: {
 			type: String,
+			unique: true,
+			index: true,
 			required: true
 		},
 		expirationTime: {
 			type: Date,
+			index: true,
 			required: true
 		}
 	},
@@ -33,5 +37,7 @@ const sessionSchema: Schema<SessionInterface> = new Schema(
 		collection: 'sessions'
 	}
 );
+
+sessionSchema.index({ userId: 1, refPath: 1, type: 1 });
 
 export default mongoose.model<SessionInterface>('sessions', sessionSchema);
