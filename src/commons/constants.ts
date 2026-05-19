@@ -77,7 +77,8 @@ const EMAIL_TYPES = {
 };
 
 const DATABASE_VERSIONS = {
-	ONE: 1
+	ONE: 1,
+	TWO: 2
 };
 
 const GENDERS = {
@@ -108,10 +109,21 @@ const USER_TYPE = {
 
 const USER_VALIDATION_CHECK = { isDeleted: { $ne: true } };
 
-const AVAILABLE_AUTHS = {
-	ADMIN: 1,
-	ADMIN_FORGOT_PASSWORD: 2
+const AVAILABLE_AUTHS: Record<string, number> = {
+	SUPER_ADMIN: 1,
+	SCHOOL_ADMIN: 2,
+	SCHOOL_OPERATOR: 3,
+	TEACHER: 4,
+	PARENT: 5,
+	STUDENT: 6,
+	GUEST: 7,
+	ANY_LOGGED_IN_USER: 8
 };
+
+Object.defineProperties(AVAILABLE_AUTHS, {
+	ADMIN: { value: AVAILABLE_AUTHS.SUPER_ADMIN, enumerable: false },
+	ADMIN_FORGOT_PASSWORD: { value: 9, enumerable: false }
+});
 
 const KYC_STATUS = {
 	PENDING: 1,
@@ -119,10 +131,19 @@ const KYC_STATUS = {
 	REJECTED: 3
 };
 
-const SESSION = {
-	LOGIN: 1,
-	FORGOT_PASSWORD: 2
+const AUTH_PROVIDERS = {
+	PASSWORD: 'password',
+	GOOGLE: 'google'
 };
+
+const SESSION_TYPES = {
+	LOGIN: 'login',
+	FORGOT_PASSWORD: 'forgot_password',
+	GOOGLE_LOGIN: 'google_login',
+	REFRESH_TOKEN: 'refresh_token'
+};
+
+const SESSION = SESSION_TYPES;
 
 const EXPIRATION_TIME = {
 	LOGIN_EXPIRATION: () => Date.now() + 24 * 60 * 60 * 1000, // 24 hours
@@ -194,11 +215,13 @@ const SESSIONS_REF_PATH = {
 };
 
 const USER_ROLES = {
-	SUBSCRIBER: 1,
-	EDITOR: 2,
-	MAINTAINER: 3,
-	AUTHOR: 4,
-	ADMIN: 5
+	SUPER_ADMIN: 'super_admin',
+	SCHOOL_ADMIN: 'school_admin',
+	SCHOOL_OPERATOR: 'school_operator',
+	TEACHER: 'teacher',
+	PARENT: 'parent',
+	STUDENT: 'student',
+	GUEST: 'guest'
 };
 
 const COUNTRIES = {
@@ -210,9 +233,16 @@ const COUNTRIES = {
 };
 
 const USER_STATUS = {
-	PENDING: 1,
-	ACTIVE: 2,
-	INACTIVE: 3
+	PENDING: 'pending',
+	ACTIVE: 'active',
+	INACTIVE: 'inactive',
+	BLOCKED: 'blocked'
+};
+
+const SCHOOL_STATUS = {
+	ACTIVE: 'active',
+	INACTIVE: 'inactive',
+	SUSPENDED: 'suspended'
 };
 
 const CARD_TYPES = {
@@ -292,6 +322,8 @@ export const Constants = {
 	REGEX,
 	USER_VALIDATION_CHECK,
 	AVAILABLE_AUTHS,
+	AUTH_PROVIDERS,
+	SESSION_TYPES,
 	KYC_STATUS,
 	SESSION,
 	KYC_TYPE,
@@ -311,6 +343,7 @@ export const Constants = {
 	USER_ROLES,
 	COUNTRIES,
 	USER_STATUS,
+	SCHOOL_STATUS,
 	CARD_TYPES,
 	ADDRESS_TYPES,
 	CONNECTED_ACCOUNTS,

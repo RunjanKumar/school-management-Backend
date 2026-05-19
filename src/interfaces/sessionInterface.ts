@@ -5,8 +5,15 @@ export interface SessionInterface extends Document {
 	createdAt: Date;
 	updatedAt: Date;
 	userId: Types.ObjectId;
-	refPath: string;
-	type: number;
+	refPath?: string;
+	schoolId?: Types.ObjectId;
+	role: string;
+	type: string;
 	token: string;
+	refreshTokenHash?: string;
+	deviceId?: string;
+	ipAddress?: string;
+	userAgent?: string;
 	expirationTime: Date;
+	revokedAt?: Date;
 }

@@ -94,7 +94,8 @@ const validateAdmin = async (request: AuthenticatedRequestInterface) => {
 		token: token,
 		refPath: Constants.SESSIONS_REF_PATH.ADMIN,
 		type: Constants.SESSION.LOGIN,
-		expirationTime: { $gt: new Date() }
+		expirationTime: { $gt: new Date() },
+		revokedAt: { $exists: false }
 	});
 
 	if (!session) {
@@ -136,7 +137,8 @@ const validateAdminForgotPassword = async (request: AuthenticatedRequestInterfac
 		token: token,
 		refPath: Constants.SESSIONS_REF_PATH.ADMIN,
 		type: Constants.SESSION.FORGOT_PASSWORD,
-		expirationTime: { $gt: new Date() }
+		expirationTime: { $gt: new Date() },
+		revokedAt: { $exists: false }
 	});
 
 	if (!session) {

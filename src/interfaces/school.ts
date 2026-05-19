@@ -5,16 +5,11 @@ export interface SchoolInterface extends Document {
 	createdAt: Date;
 	updatedAt: Date;
 	name: string;
-	website?: string;
-	email: string;
-	contactNumber: string;
-	address: {
-		city: string;
-		state: string;
-		zipcode: string;
-		address: string;
-		landmark?: string;
-	};
-	schoolOwnerId: Types.ObjectId;
+	code: string;
+	status: string;
+	address?: Record<string, unknown>;
+	contactEmail?: string;
+	contactPhone?: string;
+	createdBy: Types.ObjectId;
 	isDeleted: boolean;
 }

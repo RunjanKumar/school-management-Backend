@@ -12,12 +12,24 @@ const sessionSchema: Schema<SessionInterface> = new Schema(
 		refPath: {
 			type: String,
 			enum: Object.values(Constants.SESSIONS_REF_PATH),
-			required: true
+			default: Constants.SESSIONS_REF_PATH.USER,
+			index: true
 		},
 		type: {
-			type: Number,
-			enum: Object.values(Constants.SESSION),
+			type: String,
+			enum: Object.values(Constants.SESSION_TYPES),
 			required: true
+		},
+		role: {
+			type: String,
+			enum: Object.values(Constants.USER_ROLES),
+			required: true,
+			index: true
+		},
+		schoolId: {
+			type: Schema.Types.ObjectId,
+			ref: 'schools',
+			index: true
 		},
 		token: {
 			type: String,
@@ -25,10 +37,31 @@ const sessionSchema: Schema<SessionInterface> = new Schema(
 			index: true,
 			required: true
 		},
+		refreshTokenHash: {
+			type: String,
+			trim: true
+		},
+		deviceId: {
+			type: String,
+			trim: true,
+			index: true
+		},
+		ipAddress: {
+			type: String,
+			trim: true
+		},
+		userAgent: {
+			type: String,
+			trim: true
+		},
 		expirationTime: {
 			type: Date,
 			index: true,
 			required: true
+		},
+		revokedAt: {
+			type: Date,
+			index: true
 		}
 	},
 	{
@@ -39,5 +72,6 @@ const sessionSchema: Schema<SessionInterface> = new Schema(
 );
 
 sessionSchema.index({ userId: 1, refPath: 1, type: 1 });
+sessionSchema.index({ userId: 1, role: 1, schoolId: 1, type: 1 });
 
 export default mongoose.model<SessionInterface>('sessions', sessionSchema);

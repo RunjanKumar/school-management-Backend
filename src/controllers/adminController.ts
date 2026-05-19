@@ -38,6 +38,7 @@ async function loginAdmin(payload: any) {
 		userId: admin._id,
 		refPath: Constants.SESSIONS_REF_PATH.ADMIN,
 		type: Constants.SESSION.LOGIN,
+		role: Constants.USER_ROLES.SUPER_ADMIN,
 		token: token.token,
 		expirationTime: new Date(Date.now() + Constants.TOKEN_EXPIRATION_TIME.LOGIN * 1000)
 	});
@@ -92,6 +93,7 @@ async function forgotAdminPassword(payload: any) {
 		userId: admin._id,
 		refPath: Constants.SESSIONS_REF_PATH.ADMIN,
 		type: Constants.SESSION.FORGOT_PASSWORD,
+		role: Constants.USER_ROLES.SUPER_ADMIN,
 		token: forgotPasswordToken.token,
 		expirationTime: new Date(Date.now() + Constants.TOKEN_EXPIRATION_TIME.FORGOT_PASSWORD * 1000)
 	});
