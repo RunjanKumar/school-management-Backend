@@ -2,8 +2,6 @@ import mongoose, { Schema } from 'mongoose';
 import { Constants } from '@school/common';
 import { SessionInterface } from '../interfaces';
 
-const MODEL_NAME = 'authServiceSessions';
-
 const sessionSchema: Schema<SessionInterface> = new Schema(
 	{
 		userId: {
@@ -76,5 +74,4 @@ const sessionSchema: Schema<SessionInterface> = new Schema(
 sessionSchema.index({ userId: 1, refPath: 1, type: 1 });
 sessionSchema.index({ userId: 1, role: 1, schoolId: 1, type: 1 });
 
-export default mongoose.models[MODEL_NAME] || mongoose.model<SessionInterface>(MODEL_NAME, sessionSchema);
-
+export default mongoose.model<SessionInterface>('sessions', sessionSchema);

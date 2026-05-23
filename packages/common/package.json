@@ -1,15 +1,26 @@
 {
   "name": "@school/common",
   "version": "1.0.0",
-  "description": "Shared constants, types, and helpers for school management services",
+  "private": true,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "files": [
-    "dist"
-  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "dev": "tsc -p tsconfig.json --watch"
+    "dev": "tsc -w -p tsconfig.json"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "bcrypt": "^5.1.1",
+    "mongoose": "^8.9.3",
+    "winston": "^3.17.0",
+    "joi": "^17.13.3"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.17",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/bcrypt": "^5.0.2",
+    "@types/node": "^20.8.4",
+    "typescript": "^5.2.2"
   }
 }
-

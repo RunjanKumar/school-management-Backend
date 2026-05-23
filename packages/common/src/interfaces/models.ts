@@ -5,7 +5,7 @@ export interface UserAuthProviders {
 	google: boolean;
 }
 
-export interface UserInterface extends Document {
+export interface IUser extends Document {
 	_id: Types.ObjectId;
 	createdAt: Date;
 	updatedAt: Date;
@@ -24,7 +24,21 @@ export interface UserInterface extends Document {
 	isDeleted: boolean;
 }
 
-export interface SessionInterface extends Document {
+export interface ISchool extends Document {
+	_id: Types.ObjectId;
+	createdAt: Date;
+	updatedAt: Date;
+	name: string;
+	code: string;
+	status: string;
+	address?: Record<string, unknown>;
+	contactEmail?: string;
+	contactPhone?: string;
+	createdBy: Types.ObjectId;
+	isDeleted: boolean;
+}
+
+export interface ISession extends Document {
 	_id: Types.ObjectId;
 	createdAt: Date;
 	updatedAt: Date;
@@ -42,7 +56,7 @@ export interface SessionInterface extends Document {
 	revokedAt?: Date;
 }
 
-export interface LoginAuditInterface extends Document {
+export interface ILoginAudit extends Document {
 	_id: Types.ObjectId;
 	createdAt: Date;
 	userId?: Types.ObjectId;
@@ -54,4 +68,14 @@ export interface LoginAuditInterface extends Document {
 	failureReason?: string;
 	ipAddress?: string;
 	userAgent?: string;
+}
+
+export interface IAdmin extends Document {
+	_id: Types.ObjectId;
+	createdAt: Date;
+	updatedAt: Date;
+	name: string;
+	email: string;
+	password: string;
+	isDeleted: boolean;
 }

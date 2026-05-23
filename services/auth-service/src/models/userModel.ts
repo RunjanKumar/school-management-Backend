@@ -3,7 +3,6 @@ import { Constants } from '@school/common';
 import { UserInterface } from '../interfaces';
 
 const PROFILE_MODELS = [ 'superAdmins', 'schoolAdmins', 'schoolOperators', 'teachers', 'parents', 'students', 'guests' ];
-const MODEL_NAME = 'authServiceUsers';
 
 const normalizeEmail = (email: string) => email.trim().toLowerCase();
 
@@ -89,6 +88,7 @@ const userSchema: Schema<UserInterface> = new Schema(
 	}
 );
 
+// because arrow functions do NOT have their own this.
 userSchema.pre('validate', function validateUser(next) {
 	if (this.email) {
 		const normalizedEmail = normalizeEmail(this.email);
@@ -129,5 +129,4 @@ userSchema.index({ normalizedEmail: 1 }, { unique: true, partialFilterExpression
 userSchema.index({ googleSub: 1 }, { unique: true, sparse: true });
 userSchema.index({ schoolId: 1, role: 1, status: 1 });
 
-export default mongoose.models[MODEL_NAME] || mongoose.model<UserInterface>(MODEL_NAME, userSchema);
-
+export default mongoose.model<UserInterface>('users', userSchema);

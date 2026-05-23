@@ -1,22 +1,24 @@
 import { Router } from 'express';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import { config } from '../config';
+import { authMiddleware } from '../middleware/authMiddleware';
 
 const router = Router();
 
-// Proxy /v1/auth/* to Auth Service (ACTIVE - no auth middleware)
-// Auth routes are generally public (login, register) or handle their own token verification internally.
+// Placeholder for School Service
+// Proxies all requests to the School Service with path rewriting
 router.use(
     '/',
+    authMiddleware,
     createProxyMiddleware({
-        target: config.services.auth,
+        target: config.services.school,
         changeOrigin: true,
         pathRewrite: {
-            '^/v1/auth': '/v1/auth', 
+            '^/v1/schools': '/v1/schools',
         },
         on: {
             error: (err, req, res) => {
-                res.status(502).json({ error: 'Auth service is currently unavailable' });
+                res.status(502).json({ error: 'School service is currently unavailable' });
             }
         }
     })

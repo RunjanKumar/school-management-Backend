@@ -2,8 +2,6 @@ import mongoose, { Schema } from 'mongoose';
 import { Constants } from '@school/common';
 import { LoginAuditInterface } from '../interfaces';
 
-const MODEL_NAME = 'authServiceLoginAudits';
-
 const loginAuditSchema: Schema<LoginAuditInterface> = new Schema(
 	{
 		userId: {
@@ -62,5 +60,4 @@ loginAuditSchema.index({ email: 1, createdAt: -1 });
 loginAuditSchema.index({ userId: 1, createdAt: -1 });
 loginAuditSchema.index({ schoolId: 1, role: 1, createdAt: -1 });
 
-export default mongoose.models[MODEL_NAME] || mongoose.model<LoginAuditInterface>(MODEL_NAME, loginAuditSchema);
-
+export default mongoose.model<LoginAuditInterface>('loginAudits', loginAuditSchema);

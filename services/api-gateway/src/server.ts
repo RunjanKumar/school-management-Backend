@@ -1,10 +1,16 @@
-import config from './config';
-import createGatewayApp from './app';
-import { logger } from './services/logger';
+import { app } from './startup/app';
+import { config } from './config';
+import { logger } from '@school/common';
 
-const app = createGatewayApp();
+const startServer = async () => {
+    try {
+        app.listen(config.port, () => {
+            logger.info(`API Gateway listening on port ${config.port} in ${config.nodeEnv} mode`);
+        });
+    } catch (error) {
+        logger.error('Failed to start API Gateway', { error });
+        process.exit(1);
+    }
+};
 
-app.listen(config.PORT, () => {
-	logger.info(`API gateway running on port ${config.PORT}`);
-});
-
+startServer();

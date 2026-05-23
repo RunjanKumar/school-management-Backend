@@ -1,21 +1,20 @@
-import { Router, Request, Response, NextFunction } from 'express';
-import * as authController from '../controllers/authController';
-import { internalAuth } from '../middleware/internalAuth';
+import { Router } from 'express';
+import { login, googleAuth, forgotPassword, resetPassword, logout, me } from '../controllers/authController';
+import { asyncHandler, validateBody } from '../utils/routeUtils';
+import Joi from 'joi';
 
 const router = Router();
 
-const send = (handler: (request: Request) => Promise<any>) => {
-	return (request: Request, response: Response, next: NextFunction) => {
-		handler(request)
-			.then((responseObject) => response.status(responseObject.statusCode || 200).json(responseObject))
-			.catch(next);
-	};
-};
+const loginSchema = Joi.object({
+  email: Joi.string().email().required(),
+  password: Joi.string().required()
+});
 
-router.post('/v1/auth/login', send(authController.login));
-router.post('/v1/auth/logout', send(authController.logout));
-router.get('/v1/auth/me', send(authController.me));
-router.post('/v1/internal/auth/validate', internalAuth, send(authController.validate));
+router.post('/login', validateBody(loginSchema), asyncHandler(login));
+router.post('/google', asyncHandler(googleAuth));
+router.post('/forgot-password', asyncHandler(forgotPassword));
+router.post('/reset-password', asyncHandler(resetPassword));
+router.post('/logout', asyncHandler(logout));
+router.get('/me', asyncHandler(me));
 
 export default router;
-

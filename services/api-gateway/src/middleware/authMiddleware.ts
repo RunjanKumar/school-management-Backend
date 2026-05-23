@@ -1,72 +1,82 @@
-import { NextFunction, Request, Response } from 'express';
-import { Constants, InternalAuthValidationResult, createErrorResponse } from '@school/common';
-import config from '../config';
-import { sendHttpRequest } from '../services/httpClient';
+import { Request, Response, NextFunction } from 'express';
+import axios from 'axios';
+import { config } from '../config';
+import { UnauthorizedError, logger } from '@school/common';
 
-type AuthMiddlewareOptions = {
-	authServiceUrl?: string;
-	internalApiKey?: string;
-	validateToken?: (token: string, internalApiKey: string) => Promise<InternalAuthValidationResult>;
-};
-
-const getBearerToken = (authorizationHeader?: string) => {
-	if (!authorizationHeader) return '';
-	return authorizationHeader.startsWith('Bearer ') ? authorizationHeader.slice(7) : authorizationHeader;
-};
-
-async function defaultValidateToken(token: string, internalApiKey: string, authServiceUrl: string): Promise<InternalAuthValidationResult> {
-	const body = Buffer.from(JSON.stringify({ token }));
-	const response = await sendHttpRequest({
-		method: 'POST',
-		url: `${authServiceUrl.replace(/\/$/, '')}/v1/internal/auth/validate`,
-		headers: {
-			'content-type': 'application/json',
-			'content-length': String(body.length),
-			'x-internal-key': internalApiKey
-		},
-		body
-	});
-
-	if (!response.body.length) {
-		return { valid: false };
-	}
-
-	return JSON.parse(response.body.toString()) as InternalAuthValidationResult;
+interface TokenCacheEntry {
+    data: {
+        userId: string;
+        role: string;
+        schoolId: string | null;
+        sessionId: string;
+    };
+    expiresAt: number;
 }
 
-export function createAuthMiddleware(options: AuthMiddlewareOptions = {}) {
-	const authServiceUrl = options.authServiceUrl || config.AUTH_SERVICE_URL;
-	const internalApiKey = options.internalApiKey || config.INTERNAL_API_KEY;
-	const validateToken = options.validateToken || ((token: string, key: string) => defaultValidateToken(token, key, authServiceUrl));
+const tokenCache: Record<string, TokenCacheEntry> = {};
+const CACHE_TTL = 60 * 1000; // 60 seconds TTL
 
-	return async (request: Request, response: Response, next: NextFunction) => {
-		const token = getBearerToken(request.headers.authorization);
+export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            throw new UnauthorizedError('Missing or invalid authorization header');
+        }
 
-		if (!token) {
-			const responseObject = createErrorResponse(Constants.RESPONSE_MESSAGES.UNAUTHORIZED, Constants.ERROR_TYPES.UNAUTHORIZED);
-			return response.status(responseObject.statusCode).json(responseObject);
-		}
+        const token = authHeader.split(' ')[1];
+        const now = Date.now();
 
-		try {
-			const validation = await validateToken(token, internalApiKey);
+        // 1. Check in-memory cache
+        if (tokenCache[token] && tokenCache[token].expiresAt > now) {
+            const cachedData = tokenCache[token].data;
+            req.headers['x-user-id'] = cachedData.userId;
+            req.headers['x-user-role'] = cachedData.role;
+            if (cachedData.schoolId) req.headers['x-school-id'] = cachedData.schoolId;
+            req.headers['x-session-id'] = cachedData.sessionId;
+            return next();
+        }
 
-			if (!validation.valid || !validation.userId || !validation.role) {
-				const responseObject = createErrorResponse(Constants.RESPONSE_MESSAGES.UNAUTHORIZED, Constants.ERROR_TYPES.UNAUTHORIZED);
-				return response.status(responseObject.statusCode).json(responseObject);
-			}
+        // Random cleanup of expired entries
+        if (Math.random() < 0.05) {
+            for (const key in tokenCache) {
+                if (tokenCache[key].expiresAt <= now) {
+                    delete tokenCache[key];
+                }
+            }
+        }
 
-			request.headers['x-user-id'] = validation.userId;
-			request.headers['x-user-role'] = validation.role;
-			request.headers['x-school-id'] = validation.schoolId || '';
-			request.headers['x-session-id'] = validation.sessionId || '';
+        // 2. Validate token with Auth Service
+        const response = await axios.post(
+            `${config.services.auth}/internal/auth/validate`,
+            { token },
+            {
+                headers: {
+                    'x-internal-key': config.internalApiKey,
+                },
+            }
+        );
 
-			return next();
-		} catch (_error) {
-			const responseObject = createErrorResponse(Constants.RESPONSE_MESSAGES.UNAUTHORIZED, Constants.ERROR_TYPES.UNAUTHORIZED);
-			return response.status(responseObject.statusCode).json(responseObject);
-		}
-	};
-}
+        if (!response.data || !response.data.valid) {
+            throw new UnauthorizedError('Invalid token');
+        }
 
-export const authMiddleware = createAuthMiddleware();
+        const { userId, role, schoolId, sessionId } = response.data.payload;
 
+        // 3. Cache the valid token
+        tokenCache[token] = {
+            data: { userId, role, schoolId, sessionId },
+            expiresAt: now + CACHE_TTL,
+        };
+
+        // 4. Set headers for downstream proxy
+        req.headers['x-user-id'] = userId;
+        req.headers['x-user-role'] = role;
+        if (schoolId) req.headers['x-school-id'] = schoolId;
+        req.headers['x-session-id'] = sessionId;
+
+        next();
+    } catch (error) {
+        logger.error('Authentication failed', { error: error instanceof Error ? error.message : String(error) });
+        next(new UnauthorizedError('Authentication failed'));
+    }
+};

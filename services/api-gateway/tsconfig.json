@@ -4,7 +4,8 @@
     "rootDir": "./src",
     "outDir": "./dist"
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["dist", "node_modules"]
+  "include": ["src/**/*"],
+  "references": [
+    { "path": "../../packages/common" }
+  ]
 }
-

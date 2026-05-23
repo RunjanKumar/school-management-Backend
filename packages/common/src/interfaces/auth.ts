@@ -1,3 +1,6 @@
+import { Request } from 'express';
+import { IAdmin, IUser } from './models';
+
 export interface AuthContext {
 	userId: string;
 	role: string;
@@ -5,11 +8,16 @@ export interface AuthContext {
 	sessionId?: string;
 }
 
-export interface JwtPayload extends AuthContext {
-	iat?: number;
-	exp?: number;
+export interface JwtPayload {
+	id: string;
+	timestamp: number;
+	sessionKey: string;
 }
 
-export interface InternalAuthValidationResult extends Partial<AuthContext> {
-	valid: boolean;
+export interface AuthenticatedRequest extends Request {
+	user?: IUser;
+	admin?: IAdmin;
+	userSession?: any;
+	authToken?: string;
+	key?: boolean;
 }
