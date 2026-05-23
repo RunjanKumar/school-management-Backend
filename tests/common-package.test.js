@@ -34,4 +34,7 @@ test('@school/common exposes shared constants and response helpers', () => {
 		message: 'No token',
 		type: 'UNAUTHORIZED'
 	});
+
+	const readableError = common.convertErrorIntoReadableForm(new Error('Validation failed: ["email is required"]'));
+	assert.equal(readableError.message, 'email is required');
 });

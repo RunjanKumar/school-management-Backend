@@ -1,7 +1,7 @@
 import handlebars from 'handlebars';
 import nodemailer from 'nodemailer';
 import config from '../config';
-import { Constants } from '@school/common';
+import { Constants, convertErrorIntoReadableForm } from '@school/common';
 import mongoose from 'mongoose';
 import fs from 'fs';
 import path from 'path';
@@ -9,23 +9,7 @@ import path from 'path';
 const transporter = nodemailer.createTransport(config.SMTP.TRANSPORT);
 const forgotPasswordTemplate = fs.readFileSync(path.join(__dirname, '../../public/templates/forgotPassword.html'), 'utf8');
 
-/**
- * function to convert an error into a readable form.
- * @param {} error
- */
-export const convertErrorIntoReadableForm = (error: any) => {
-	let errorMessage = '';
-	if (error.message.indexOf('[') > -1) {
-		errorMessage = error.message.substr(error.message.indexOf('['));
-	} else {
-		errorMessage = error.message;
-	}
-	errorMessage = errorMessage.replace(/"/g, '');
-	errorMessage = errorMessage.replace('[', '');
-	errorMessage = errorMessage.replace(']', '');
-	error.message = errorMessage;
-	return error;
-};
+export { convertErrorIntoReadableForm };
 
 /**
  * Send an email to perticular user mail
