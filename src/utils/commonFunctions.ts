@@ -1,10 +1,13 @@
 import handlebars from 'handlebars';
 import nodemailer from 'nodemailer';
 import config from '../config';
-import { Constants } from '../commons/constants';
+import { Constants } from '@school/common';
 import mongoose from 'mongoose';
+import fs from 'fs';
+import path from 'path';
 
 const transporter = nodemailer.createTransport(config.SMTP.TRANSPORT);
+const forgotPasswordTemplate = fs.readFileSync(path.join(__dirname, '../../public/templates/forgotPassword.html'), 'utf8');
 
 /**
  * function to convert an error into a readable form.
@@ -89,7 +92,7 @@ const emailTypes = (payload: any, type: any) => {
 	switch (type) {
 	case Constants.EMAIL_TYPES.FORGOT_PASSWORD:
 		EmailStatus.Subject = Constants.EMAIL_SUBJECTS.FORGOT_PASSWORD;
-		EmailStatus.template = Constants.EMAIL_CONTENTS.FORGOT_PASSWORD;
+		EmailStatus.template = forgotPasswordTemplate;
 		EmailStatus.data.firstName = payload.firstName;
 		EmailStatus.data.resetUrl = payload.resetUrl;
 		break;

@@ -1,7 +1,7 @@
 import dbService from '../services/databaseService';
-import { createErrorResponse, createSuccessResponse } from '../commons/responseHelpers';
+import { createErrorResponse, createSuccessResponse } from '@school/common';
 import { adminModel, sessionModel } from '../models';
-import { Constants } from '../commons/constants';
+import { Constants } from '@school/common';
 import { Utils } from '../utils/utils';
 import { AdminInterface } from '../interfaces';
 import { sendEmail } from '../utils/commonFunctions';

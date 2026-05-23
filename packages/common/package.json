@@ -1,0 +1,15 @@
+{
+  "name": "@school/common",
+  "version": "1.0.0",
+  "description": "Shared constants, types, and helpers for school management services",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch"
+  }
+}
+

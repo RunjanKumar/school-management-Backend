@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const test = require('node:test');
 const mongoose = require('mongoose');
 
-const { Constants } = require('../src/commons/constants');
+const { Constants } = require('@school/common');
 const { buildSuperAdminUserPayload } = require('../src/utils/dbMigration');
 const { userModel, schoolModel, sessionModel, loginAuditModel } = require('../src/models');
 

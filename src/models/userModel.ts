@@ -1,5 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
-import { Constants } from '../commons/constants';
+import { Constants } from '@school/common';
 import { UserInterface } from '../interfaces';
 
 const PROFILE_MODELS = [ 'superAdmins', 'schoolAdmins', 'schoolOperators', 'teachers', 'parents', 'students', 'guests' ];
@@ -88,6 +88,7 @@ const userSchema: Schema<UserInterface> = new Schema(
 	}
 );
 
+// because arrow functions do NOT have their own this.
 userSchema.pre('validate', function validateUser(next) {
 	if (this.email) {
 		const normalizedEmail = normalizeEmail(this.email);

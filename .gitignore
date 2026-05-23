@@ -38,3 +38,8 @@ public/userFiles/
 package-lock.json
 serviceAccountKey.json
 swagger.json
+
+# Microservices - ignore built output in all packages/services
+packages/*/dist/
+services/*/dist/
+services/*/logs/

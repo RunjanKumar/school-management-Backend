@@ -1,4 +1,4 @@
-import { Constants } from '../../../commons/constants';
+import { Constants } from '@school/common';
 import { adminController } from '../../../controllers';
 import joiUtils from '../../../utils/joiUtils';
 

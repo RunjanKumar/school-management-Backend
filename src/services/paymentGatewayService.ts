@@ -1,4 +1,4 @@
-import { Constants } from '../commons/constants';
+import { Constants } from '@school/common';
 
 interface CardDetails {
 	cardNumber: string;

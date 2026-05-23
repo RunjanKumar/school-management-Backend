@@ -1,7 +1,7 @@
 import Joi from 'joi';
 import moment from 'moment';
 import mongoose from 'mongoose';
-import { Constants } from '../commons/constants';
+import { Constants } from '@school/common';
 
 const joiUtils: any = {
 	Joi: Joi.extend((joi) => ({

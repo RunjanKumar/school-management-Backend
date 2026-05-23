@@ -1,4 +1,4 @@
-import { Constants } from '../commons/constants';
+import { Constants } from '@school/common';
 import CONFIG from '../config';
 import * as Models from '../models';
 import { Utils } from '../utils/utils';

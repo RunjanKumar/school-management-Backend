@@ -1,6 +1,6 @@
 import fs from 'fs';
 import j2s from 'joi-to-swagger';
-import { Constants } from '../commons/constants';
+import { Constants } from '@school/common';
 import { SWAGGER } from '../config/swaggerConfig';
 const MESSAGES = {
 	FORBIDDEN: 'Forbidden',

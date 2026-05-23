@@ -1,7 +1,7 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import { Constants } from '../commons/constants';
+import { Constants } from '@school/common';
 import mongoose from 'mongoose';
 import { SignedToken } from '../commons/interfaces';
 import config from '../config';

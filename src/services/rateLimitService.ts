@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import rateLimit from 'express-rate-limit';
-import { Constants } from '../commons/constants';
-import { createErrorResponse } from '../commons/responseHelpers';
+import { Constants } from '@school/common';
+import { createErrorResponse } from '@school/common';
 
 const rateLimitService: any = {};
 

@@ -1,5 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
-import { Constants } from '../commons/constants';
+import { Constants } from '@school/common';
 import { LoginAuditInterface } from '../interfaces';
 
 const loginAuditSchema: Schema<LoginAuditInterface> = new Schema(

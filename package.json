@@ -1,18 +1,28 @@
 {
-  "name": "admin-boilerplate",
+  "name": "school-management",
   "version": "1.0.0",
-  "description": "Node.js + TypeScript + Express",
-  "main": "dist/server.js",
-	"scripts": {
-		"start": "node dist/server.js",
-		"dev": "nodemon src/server.ts",
-		"test": "node --test tests/*.test.js",
-		"build": "tsc -p tsconfig.json",
-		"lint": "eslint \"src/**/*.{ts,tsx,js,jsx}\"",
-		"prepare": "husky install",
-		"lint:fix": "prettier --write 'src/**/*.{ts,tsx,js,jsx,json,md}' && eslint --fix 'src/**/*.{ts,tsx}' && git add ."
-	},
+  "private": true,
+  "description": "School Management System — Microservices Architecture",
+  "workspaces": [
+    "packages/*",
+    "services/*"
+  ],
+  "scripts": {
+    "start:monolith": "node dist/server.js",
+    "dev:monolith": "nodemon src/server.ts",
+    "build:monolith": "tsc -p tsconfig.json",
+    "build:common": "npm run build --workspace=@school/common",
+    "dev:gateway": "npm run dev --workspace=@school/api-gateway",
+    "dev:auth": "npm run dev --workspace=@school/auth-service",
+    "build:all": "npm run build:common && npm run build --workspace=@school/api-gateway && npm run build --workspace=@school/auth-service",
+    "pretest": "npm run build:common",
+    "test": "node --test tests/*.test.js",
+    "lint": "eslint \"src/**/*.{ts,tsx,js,jsx}\"",
+    "prepare": "husky install",
+    "lint:fix": "prettier --write 'src/**/*.{ts,tsx,js,jsx,json,md}' && eslint --fix 'src/**/*.{ts,tsx}' && git add ."
+  },
   "dependencies": {
+    "@school/common": "workspace:*",
     "@types/bcrypt": "^5.0.2",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",

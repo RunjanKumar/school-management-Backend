@@ -1,7 +1,7 @@
 import { Response, NextFunction } from 'express';
 import { AuthenticatedRequestInterface } from '../interfaces';
-import { createErrorResponse } from '../commons/responseHelpers';
-import { Constants } from '../commons/constants';
+import { createErrorResponse } from '@school/common';
+import { Constants } from '@school/common';
 import { Utils } from '../utils/utils';
 import dbService from './databaseService';
 import * as Models from '../models';
