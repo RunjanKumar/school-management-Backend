@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import axios from 'axios';
 import { config } from '../config';
-import { UnauthorizedError, logger } from '@school/common';
+import { UnauthorizedError } from '@school/common';
+import { logger } from '../services/logger';
 
 interface TokenCacheEntry {
     data: {
@@ -16,7 +17,27 @@ interface TokenCacheEntry {
 const tokenCache: Record<string, TokenCacheEntry> = {};
 const CACHE_TTL = 60 * 1000; // 60 seconds TTL
 
-export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
+type AuthMiddlewareOptions = {
+    authServiceUrl?: string;
+    internalApiKey?: string;
+    validateToken?: (token: string, internalApiKey: string) => Promise<any>;
+};
+
+const defaultValidateToken = async (token: string, internalApiKey: string, authServiceUrl = config.services.auth) => {
+    const response = await axios.post(
+        `${authServiceUrl}/internal/auth/validate`,
+        { token },
+        {
+            headers: {
+                'x-internal-key': internalApiKey,
+            },
+        }
+    );
+
+    return response.data;
+};
+
+export const createAuthMiddleware = (options: AuthMiddlewareOptions = {}) => async (req: Request, res: Response, next: NextFunction) => {
     try {
         const authHeader = req.headers.authorization;
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -46,21 +67,17 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
         }
 
         // 2. Validate token with Auth Service
-        const response = await axios.post(
-            `${config.services.auth}/internal/auth/validate`,
-            { token },
-            {
-                headers: {
-                    'x-internal-key': config.internalApiKey,
-                },
-            }
-        );
+        const internalApiKey = options.internalApiKey || config.internalApiKey;
+        const authServiceUrl = options.authServiceUrl || config.services.auth;
+        const validationResult = options.validateToken
+            ? await options.validateToken(token, internalApiKey)
+            : await defaultValidateToken(token, internalApiKey, authServiceUrl);
 
-        if (!response.data || !response.data.valid) {
+        if (!validationResult || !validationResult.valid) {
             throw new UnauthorizedError('Invalid token');
         }
 
-        const { userId, role, schoolId, sessionId } = response.data.payload;
+        const { userId, role, schoolId, sessionId } = validationResult.payload || validationResult;
 
         // 3. Cache the valid token
         tokenCache[token] = {
@@ -77,6 +94,17 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
         next();
     } catch (error) {
         logger.error('Authentication failed', { error: error instanceof Error ? error.message : String(error) });
-        next(new UnauthorizedError('Authentication failed'));
+        if (res.headersSent) {
+            return next(new UnauthorizedError('Authentication failed'));
+        }
+
+        return res.status(401).json({
+            statusCode: 401,
+            status: false,
+            message: 'Authentication failed',
+            type: 'UNAUTHORIZED'
+        });
     }
 };
+
+export const authMiddleware = createAuthMiddleware();

@@ -1,10 +1,6 @@
 import winston from 'winston';
 
-/**
- * Factory function to create a Winston logger for a specific service.
- * @param serviceName Name of the service initializing the logger
- */
-export function createLogger(serviceName: string): winston.Logger {
+export function createLogger(serviceName = process.env.SERVICE_NAME || 'school-management'): winston.Logger {
 	return winston.createLogger({
 		level: process.env.LOG_LEVEL || 'info',
 		format: winston.format.combine(
@@ -23,3 +19,5 @@ export function createLogger(serviceName: string): winston.Logger {
 		]
 	});
 }
+
+export const logger = createLogger();

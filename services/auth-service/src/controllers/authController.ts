@@ -25,7 +25,7 @@ export const login = async (req: Request, res: Response) => {
   
   await LoginAudit.create({ userId: user._id, email: normalizedEmail, role: user.role, schoolId: user.schoolId, loginMethod: Constants.AUTH_PROVIDERS.PASSWORD, success: true });
 
-  res.json({ success: true, token, refreshToken, user: { id: user._id, email: user.email, role: user.role } });
+  return res.json({ success: true, token, refreshToken, user: { id: user._id, email: user.email, role: user.role } });
 };
 
 export const googleAuth = async (req: Request, res: Response) => {
@@ -38,7 +38,7 @@ export const googleAuth = async (req: Request, res: Response) => {
   }
 
   const { token, refreshToken } = await generateTokens(user._id as any, user.role, user.schoolId as any);
-  res.json({ success: true, token, refreshToken });
+  return res.json({ success: true, token, refreshToken });
 };
 
 export const forgotPassword = async (req: Request, res: Response) => {

@@ -10,6 +10,11 @@ export const SESSION_TYPES = {
 	REFRESH_TOKEN: 'refresh_token'
 };
 
+export const SESSIONS_REF_PATH = {
+	USER: 'users',
+	ADMIN: 'admins'
+};
+
 export const TOKEN_EXPIRATION_TIME = {
 	LOGIN: 86400 * 7, // 7 days (seconds in a day * 7)
 	FORGOT_PASSWORD: 60 * 30 // 30 minutes (seconds in a minute * 30)

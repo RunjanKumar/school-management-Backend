@@ -2,7 +2,7 @@ import cors from 'cors';
 import express from 'express';
 import rateLimit from 'express-rate-limit';
 import config from './config';
-import { createAuthProxyRouter } from './routes/authProxy';
+import { createAuthProxyMiddleware } from './routes/authProxy';
 import { errorHandler } from './middleware/errorHandler';
 
 type GatewayAppOptions = {
@@ -33,11 +33,17 @@ export function createGatewayApp(options: GatewayAppOptions = {}) {
 		});
 	});
 
-	app.use(createAuthProxyRouter(options.authServiceUrl));
+	const authProxyMiddleware = createAuthProxyMiddleware(options.authServiceUrl);
+	app
+		.route('/v1/auth/*')
+		.delete(authProxyMiddleware)
+		.get(authProxyMiddleware)
+		.patch(authProxyMiddleware)
+		.post(authProxyMiddleware)
+		.put(authProxyMiddleware);
 	app.use(errorHandler);
 
 	return app;
 }
 
 export default createGatewayApp;
-

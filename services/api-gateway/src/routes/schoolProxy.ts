@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import { config } from '../config';
 import { authMiddleware } from '../middleware/authMiddleware';
+import { sendProxyError } from '../utils/proxyError';
 
 const router = Router();
 
@@ -17,8 +18,8 @@ router.use(
             '^/v1/schools': '/v1/schools',
         },
         on: {
-            error: (err, req, res) => {
-                res.status(502).json({ error: 'School service is currently unavailable' });
+            error: (_err, _req, res) => {
+                sendProxyError(res, 'School service is currently unavailable');
             }
         }
     })

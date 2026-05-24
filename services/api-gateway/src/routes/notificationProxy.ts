@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import { config } from '../config';
 import { authMiddleware } from '../middleware/authMiddleware';
+import { sendProxyError } from '../utils/proxyError';
 
 const router = Router();
 
@@ -19,8 +20,8 @@ router.use(
             '^/v1/notifications': '/v1/notifications',
         },
         on: {
-            error: (err, req, res) => {
-                res.status(502).json({ error: 'Notification service is currently unavailable' });
+            error: (_err, _req, res) => {
+                sendProxyError(res, 'Notification service is currently unavailable');
             }
         }
     })

@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import crypto from 'crypto';
 
 export interface SignedToken {
@@ -42,7 +42,7 @@ const getJwtSecret = (): string => {
  * @param expirationTime - Expiration time in seconds or a string describing a time span.
  * @returns A signed token object containing sessionKey and token.
  */
-export const generateJWTToken = (userId: string, expirationTime: number | string): SignedToken => {
+export const generateJWTToken = (userId: string, expirationTime: SignOptions['expiresIn']): SignedToken => {
 	const sessionKey = crypto.randomBytes(16).toString('hex') + userId;
 
 	const payload = {

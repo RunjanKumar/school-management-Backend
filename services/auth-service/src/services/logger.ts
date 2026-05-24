@@ -1,9 +1,3 @@
-import winston from 'winston';
+import { createLogger } from '@school/common';
 
-export const logger = winston.createLogger({
-	level: process.env.LOG_LEVEL || 'info',
-	format: winston.format.combine(winston.format.timestamp(), winston.format.errors({ stack: true }), winston.format.json()),
-	defaultMeta: { service: 'auth-service' },
-	transports: [ new winston.transports.Console() ]
-});
-
+export const logger = createLogger('auth-service');

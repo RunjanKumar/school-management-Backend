@@ -1,6 +1,6 @@
 import { app } from './startup/app';
 import { config } from './config';
-import { logger } from '@school/common';
+import { logger } from './services/logger';
 
 const startServer = async () => {
     try {
