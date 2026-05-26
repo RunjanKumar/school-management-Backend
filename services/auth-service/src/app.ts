@@ -20,6 +20,24 @@ const googleLoginSchema = Joi.object({
 	deviceId: Joi.string().optional()
 });
 
+const forgotPasswordSchema = Joi.object({
+	email: Joi.string().email().required()
+});
+
+const resetPasswordSchema = Joi.object({
+	token: Joi.string().required(),
+	password: Joi.string().required()
+});
+
+const refreshSchema = Joi.object({
+	refreshToken: Joi.string().required()
+});
+
+const logoutSchema = Joi.object({
+	token: Joi.string().optional(),
+	refreshToken: Joi.string().optional()
+});
+
 export function createAuthApp() {
 	const app = express();
 
@@ -38,10 +56,10 @@ export function createAuthApp() {
 
 	app.post('/v1/auth/login', validateBody(loginSchema), asyncHandler(login));
 	app.post('/v1/auth/google', validateBody(googleLoginSchema), asyncHandler(googleAuth));
-	app.post('/v1/auth/forgot-password', asyncHandler(forgotPassword));
-	app.post('/v1/auth/reset-password', asyncHandler(resetPassword));
-	app.post('/v1/auth/refresh', asyncHandler(refresh));
-	app.post('/v1/auth/logout', asyncHandler(logout));
+	app.post('/v1/auth/forgot-password', validateBody(forgotPasswordSchema), asyncHandler(forgotPassword));
+	app.post('/v1/auth/reset-password', validateBody(resetPasswordSchema), asyncHandler(resetPassword));
+	app.post('/v1/auth/refresh', validateBody(refreshSchema), asyncHandler(refresh));
+	app.post('/v1/auth/logout', validateBody(logoutSchema), asyncHandler(logout));
 	app.get('/v1/auth/me', asyncHandler(me));
 	app.post(
 		'/v1/internal/auth/validate',

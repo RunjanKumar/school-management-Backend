@@ -18,12 +18,30 @@ const googleLoginSchema = Joi.object({
 	deviceId: Joi.string().optional()
 });
 
+const forgotPasswordSchema = Joi.object({
+	email: Joi.string().email().required()
+});
+
+const resetPasswordSchema = Joi.object({
+	token: Joi.string().required(),
+	password: Joi.string().required()
+});
+
+const refreshSchema = Joi.object({
+	refreshToken: Joi.string().required()
+});
+
+const logoutSchema = Joi.object({
+	token: Joi.string().optional(),
+	refreshToken: Joi.string().optional()
+});
+
 router.post('/login', validateBody(loginSchema), asyncHandler(login));
 router.post('/google', validateBody(googleLoginSchema), asyncHandler(googleAuth));
-router.post('/forgot-password', asyncHandler(forgotPassword));
-router.post('/reset-password', asyncHandler(resetPassword));
-router.post('/refresh', asyncHandler(refresh));
-router.post('/logout', asyncHandler(logout));
+router.post('/forgot-password', validateBody(forgotPasswordSchema), asyncHandler(forgotPassword));
+router.post('/reset-password', validateBody(resetPasswordSchema), asyncHandler(resetPassword));
+router.post('/refresh', validateBody(refreshSchema), asyncHandler(refresh));
+router.post('/logout', validateBody(logoutSchema), asyncHandler(logout));
 router.get('/me', asyncHandler(me));
 
 export default router;

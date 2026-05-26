@@ -2,8 +2,9 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import { Constants, createErrorResponse, createSuccessResponse } from '@school/common';
 import { LoginAudit, School, Session, User } from '../models';
-import { createLoginSession, verifyTokenAndSession } from '../services/tokenService';
+import { createLoginSession, createPasswordResetSession, revokeSessionByRefreshToken, rotateRefreshToken, verifyTokenAndSession } from '../services/tokenService';
 import { verifyGoogleToken } from '../services/googleAuthService';
+import { logger } from '../services/logger';
 
 const GENERIC_LOGIN_FAILURE = 'Invalid email or password.';
 const GOOGLE_AUTO_CREATE_ROLES = new Set([
@@ -35,6 +36,7 @@ const auditLogin = async (
 		failureReason?: string;
 	}
 ) => {
+	// Login audits are intentionally separate from normal logs so security teams can query them later.
 	await LoginAudit.create({
 		...input,
 		ipAddress: request.ip,
@@ -81,6 +83,8 @@ export const login = async (req: Request, res: Response) => {
 	const { email, password, deviceId } = req.body;
 	const normalizedEmail = normalizeEmail(email);
 
+	logger.info('Password login requested', { email: normalizedEmail, ipAddress: req.ip });
+
 	const user = await User.findOne({ normalizedEmail, isDeleted: false }).select('+passwordHash');
 	const loginFailure = async (reason = GENERIC_LOGIN_FAILURE) => {
 		await auditLogin(req, {
@@ -91,6 +95,7 @@ export const login = async (req: Request, res: Response) => {
 			success: false,
 			failureReason: reason
 		});
+		logger.warn('Password login failed', { email: normalizedEmail, reason });
 		return sendError(res, 401, GENERIC_LOGIN_FAILURE);
 	};
 
@@ -108,7 +113,7 @@ export const login = async (req: Request, res: Response) => {
 		return loginFailure();
 	}
 
-	const { token, session } = await createLoginSession({
+	const { token, refreshToken, session } = await createLoginSession({
 		userId: user._id,
 		role: user.role,
 		schoolId: user.schoolId,
@@ -127,9 +132,11 @@ export const login = async (req: Request, res: Response) => {
 		loginMethod: Constants.AUTH_PROVIDERS.PASSWORD,
 		success: true
 	});
+	logger.info('Password login successful', { userId: user._id.toString(), role: user.role, sessionId: session._id.toString() });
 
 	const responseObject = createSuccessResponse('Login successful.', {
 		token,
+		refreshToken,
 		sessionId: session._id.toString(),
 		user: buildUserSummary(user)
 	});
@@ -145,6 +152,8 @@ export const googleAuth = async (req: Request, res: Response) => {
 	}
 
 	const normalizedEmail = normalizeEmail(claims.email);
+	logger.info('Google login requested', { email: normalizedEmail, requestedRole: role, schoolCode });
+
 	let user = await User.findOne({
 		isDeleted: false,
 		$or: [{ googleSub: claims.sub }, { normalizedEmail }]
@@ -159,6 +168,7 @@ export const googleAuth = async (req: Request, res: Response) => {
 				success: false,
 				failureReason: 'Google auto-create is not allowed for this role.'
 			});
+			logger.warn('Google auto-create rejected for protected role', { email: normalizedEmail, role });
 			return sendError(res, 403, 'Google login is not allowed for this role.', Constants.ERROR_TYPES.FORBIDDEN);
 		}
 
@@ -186,6 +196,7 @@ export const googleAuth = async (req: Request, res: Response) => {
 			emailVerified: true,
 			status: Constants.USER_STATUS.ACTIVE
 		});
+		logger.info('Google user auto-created', { userId: user._id.toString(), role: user.role, schoolId: user.schoolId?.toString() });
 	} else {
 		const statusFailure = await ensureUserCanLogin(user);
 		if (statusFailure) {
@@ -198,6 +209,7 @@ export const googleAuth = async (req: Request, res: Response) => {
 				success: false,
 				failureReason: statusFailure
 			});
+			logger.warn('Google login failed account validation', { userId: user._id.toString(), reason: statusFailure });
 			return sendError(res, 401, statusFailure);
 		}
 
@@ -208,7 +220,7 @@ export const googleAuth = async (req: Request, res: Response) => {
 		user.emailVerified = true;
 	}
 
-	const { token, session } = await createLoginSession({
+	const { token, refreshToken, session } = await createLoginSession({
 		userId: user._id,
 		role: user.role,
 		schoolId: user.schoolId,
@@ -228,9 +240,11 @@ export const googleAuth = async (req: Request, res: Response) => {
 		loginMethod: Constants.AUTH_PROVIDERS.GOOGLE,
 		success: true
 	});
+	logger.info('Google login successful', { userId: user._id.toString(), role: user.role, sessionId: session._id.toString() });
 
 	const responseObject = createSuccessResponse('Login successful.', {
 		token,
+		refreshToken,
 		sessionId: session._id.toString(),
 		user: buildUserSummary(user)
 	});
@@ -239,11 +253,19 @@ export const googleAuth = async (req: Request, res: Response) => {
 
 export const logout = async (req: Request, res: Response) => {
 	const token = getBearerToken(req) || req.body.token;
+	const refreshToken = req.body.refreshToken;
 
 	if (token) {
 		await Session.updateOne({ token, revokedAt: { $exists: false } }, { $set: { revokedAt: new Date() } });
 	}
 
+	if (refreshToken) {
+		await revokeSessionByRefreshToken(refreshToken).catch((error) => {
+			logger.warn('Refresh-token logout could not revoke a session', { error: error instanceof Error ? error.message : String(error) });
+		});
+	}
+
+	logger.info('Logout requested', { hasAccessToken: Boolean(token), hasRefreshToken: Boolean(refreshToken) });
 	const responseObject = createSuccessResponse('Logged out successfully.');
 	return res.status(responseObject.statusCode).json(responseObject);
 };
@@ -271,15 +293,96 @@ export const me = async (req: Request, res: Response) => {
 	return res.status(responseObject.statusCode).json(responseObject);
 };
 
-export const refresh = async (_req: Request, res: Response) => {
-	return sendError(res, 501, 'Refresh token flow is not implemented yet.', Constants.ERROR_TYPES.INTERNAL_SERVER_ERROR);
+export const refresh = async (req: Request, res: Response) => {
+	const { refreshToken } = req.body;
+	if (!refreshToken) {
+		return sendError(res, 400, 'refreshToken is required.', Constants.ERROR_TYPES.BAD_REQUEST);
+	}
+
+	const refreshed = await rotateRefreshToken(refreshToken).catch((error) => {
+		logger.warn('Refresh token rotation failed', { error: error instanceof Error ? error.message : String(error) });
+		return undefined;
+	});
+
+	if (!refreshed?.valid) {
+		return sendError(res, 401, refreshed?.message || 'Refresh token is invalid or expired.');
+	}
+
+	const responseObject = createSuccessResponse('Token refreshed successfully.', {
+		token: refreshed.token,
+		refreshToken: refreshed.refreshToken,
+		sessionId: refreshed.session._id.toString()
+	});
+	return res.status(responseObject.statusCode).json(responseObject);
 };
 
-export const forgotPassword = async (_req: Request, res: Response) => {
+export const forgotPassword = async (req: Request, res: Response) => {
+	const { email } = req.body;
+	const normalizedEmail = normalizeEmail(email);
+	const user = await User.findOne({ normalizedEmail, isDeleted: false, status: Constants.USER_STATUS.ACTIVE });
+
+	if (user?.authProviders?.password) {
+		const { resetToken } = await createPasswordResetSession({
+			userId: user._id,
+			role: user.role,
+			schoolId: user.schoolId,
+			ipAddress: req.ip,
+			userAgent: req.get('user-agent')
+		});
+
+		// Mail delivery is intentionally left outside this controller; return token only outside production
+		// so local learners can complete the flow without setting up SMTP.
+		logger.info('Password reset requested', { userId: user._id.toString(), email: normalizedEmail });
+		const data = process.env.NODE_ENV === 'production' ? undefined : { resetToken };
+		const responseObject = createSuccessResponse('If the email exists, password reset instructions will be sent.', data);
+		return res.status(responseObject.statusCode).json(responseObject);
+	}
+
+	logger.warn('Password reset requested for missing or non-password user', { email: normalizedEmail });
 	const responseObject = createSuccessResponse('If the email exists, password reset instructions will be sent.');
 	return res.status(responseObject.statusCode).json(responseObject);
 };
 
-export const resetPassword = async (_req: Request, res: Response) => {
-	return sendError(res, 501, 'Password reset flow is not implemented yet.', Constants.ERROR_TYPES.INTERNAL_SERVER_ERROR);
+export const resetPassword = async (req: Request, res: Response) => {
+	const { token, password } = req.body;
+	if (!Constants.REGEX.PASSWORD.test(password)) {
+		return sendError(res, 400, Constants.RESPONSE_MESSAGES.PASSWORD_VALIDATION_FAILED, Constants.ERROR_TYPES.BAD_REQUEST);
+	}
+
+	const resetSession = await Session.findOne({
+		token,
+		type: Constants.SESSION_TYPES.FORGOT_PASSWORD,
+		revokedAt: { $exists: false },
+		expirationTime: { $gt: new Date() }
+	});
+
+	if (!resetSession) {
+		return sendError(res, 401, 'Reset token is invalid or expired.');
+	}
+
+	const passwordHash = await bcrypt.hash(password, 10);
+	await User.updateOne(
+		{ _id: resetSession.userId, isDeleted: false },
+		{
+			$set: {
+				passwordHash,
+				'authProviders.password': true,
+				status: Constants.USER_STATUS.ACTIVE
+			}
+		}
+	);
+
+	// Revoke reset token and all existing login sessions so old devices cannot stay logged in.
+	await Session.updateMany(
+		{
+			userId: resetSession.userId,
+			revokedAt: { $exists: false },
+			type: { $in: [Constants.SESSION_TYPES.LOGIN, Constants.SESSION_TYPES.GOOGLE_LOGIN, Constants.SESSION_TYPES.FORGOT_PASSWORD] }
+		},
+		{ $set: { revokedAt: new Date() } }
+	);
+
+	logger.info('Password reset completed', { userId: resetSession.userId.toString() });
+	const responseObject = createSuccessResponse('Password reset successfully.');
+	return res.status(responseObject.statusCode).json(responseObject);
 };
