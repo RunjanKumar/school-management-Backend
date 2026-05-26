@@ -92,6 +92,10 @@ test('auth-service app exposes public auth routes and internal validation route'
 	assert.deepEqual(registeredRoutes, [
 		{ path: '/health', methods: [ 'get' ] },
 		{ path: '/v1/auth/login', methods: [ 'post' ] },
+		{ path: '/v1/auth/google', methods: [ 'post' ] },
+		{ path: '/v1/auth/forgot-password', methods: [ 'post' ] },
+		{ path: '/v1/auth/reset-password', methods: [ 'post' ] },
+		{ path: '/v1/auth/refresh', methods: [ 'post' ] },
 		{ path: '/v1/auth/logout', methods: [ 'post' ] },
 		{ path: '/v1/auth/me', methods: [ 'get' ] },
 		{ path: '/v1/internal/auth/validate', methods: [ 'post' ] }

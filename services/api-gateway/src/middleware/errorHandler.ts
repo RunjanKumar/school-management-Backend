@@ -11,4 +11,3 @@ export function errorHandler(error: any, _request: Request, response: Response, 
 
 	return response.status(responseObject.statusCode).json(responseObject);
 }
-

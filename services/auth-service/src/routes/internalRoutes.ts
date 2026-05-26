@@ -1,20 +1,22 @@
 import { Router, Request, Response } from 'express';
-import { verifyToken } from '../services/tokenService';
+import { verifyTokenAndSession } from '../services/tokenService';
 import { asyncHandler } from '../utils/routeUtils';
+import { internalAuth } from '../middleware/internalAuth';
 
 const router = Router();
 
-router.post('/auth/validate', asyncHandler(async (req: Request, res: Response) => {
+router.post('/auth/validate', internalAuth, asyncHandler(async (req: Request, res: Response) => {
   const { token } = req.body;
   if (!token) {
     return res.status(401).json({ valid: false, message: 'No token provided' });
   }
-  try {
-    const decoded = verifyToken(token);
-    return res.json({ valid: true, decoded });
-  } catch (error) {
-    return res.status(401).json({ valid: false, message: 'Invalid token' });
+
+  const validation = await verifyTokenAndSession(token);
+  if (!validation.valid) {
+    return res.status(401).json(validation);
   }
+
+  return res.json(validation);
 }));
 
 router.get('/users', asyncHandler(async (req: Request, res: Response) => {

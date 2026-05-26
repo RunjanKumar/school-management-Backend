@@ -1,23 +1,12 @@
-import express, { Request, Response } from 'express';
-import cors from 'cors';
 import axios from 'axios';
+import { Request, Response } from 'express';
 import { config } from '../config';
-import { errorHandler } from '@school/common';
 import { logger } from '../services/logger';
-import { globalRateLimiter } from '../middleware/rateLimiter';
-import routes from '../routes';
+import { createGatewayApp } from '../app';
 
-const app = express();
+export const app = createGatewayApp();
 
-// Middleware
-app.use(cors());
-app.use(globalRateLimiter);
-
-// Note: Body parsing is generally omitted in the API gateway for proxied routes
-// because http-proxy-middleware forwards the raw stream.
-
-// Health check endpoint
-app.get('/health', async (req: Request, res: Response) => {
+app.get('/services/health', async (_req: Request, res: Response) => {
 	const healthStatus: Record<string, string> = {
 		gateway: 'up'
 	};
@@ -39,11 +28,3 @@ app.get('/health', async (req: Request, res: Response) => {
 		timestamp: new Date().toISOString()
 	});
 });
-
-// Setup proxy routes
-app.use('/', routes);
-
-// Global Error Handler
-app.use(errorHandler);
-
-export { app };

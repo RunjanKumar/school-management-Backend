@@ -104,7 +104,7 @@ userSchema.pre('validate', function validateUser(next) {
 		this.invalidate('schoolId', 'Super admin must not have a schoolId.');
 	}
 
-	if (this.role && this.role !== Constants.USER_ROLES.SUPER_ADMIN && !this.schoolId) {
+	if (this.role && this.role !== Constants.USER_ROLES.SUPER_ADMIN && this.role !== Constants.USER_ROLES.GUEST && !this.schoolId) {
 		this.invalidate('schoolId', 'schoolId is required for school-scoped users.');
 	}
 
