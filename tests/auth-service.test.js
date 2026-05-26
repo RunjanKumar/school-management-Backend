@@ -90,6 +90,7 @@ test('auth-service app exposes public auth routes and internal validation route'
 	collectRoutes(app._router.stack);
 
 	assert.deepEqual(registeredRoutes, [
+		{ path: '/swagger.json', methods: [ 'get' ] },
 		{ path: '/health', methods: [ 'get' ] },
 		{ path: '/v1/auth/login', methods: [ 'post' ] },
 		{ path: '/v1/auth/google', methods: [ 'post' ] },

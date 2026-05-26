@@ -1,7 +1,9 @@
 import cors from 'cors';
 import express from 'express';
 import rateLimit from 'express-rate-limit';
+import swaggerUi from 'swagger-ui-express';
 import config from './config';
+import { gatewaySwaggerDocument } from './docs/swagger';
 import { createAuthProxyMiddleware } from './routes/authProxy';
 import { errorHandler } from './middleware/errorHandler';
 
@@ -23,6 +25,11 @@ export function createGatewayApp(options: GatewayAppOptions = {}) {
 			legacyHeaders: false
 		})
 	);
+
+	app.get('/swagger.json', (_request, response) => {
+		response.status(200).json(gatewaySwaggerDocument);
+	});
+	app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(gatewaySwaggerDocument));
 
 	app.get('/health', (_request, response) => {
 		response.status(200).json({

@@ -9,7 +9,11 @@ const startServer = async () => {
     await runMigrations();
     
     app.listen(config.port, () => {
+      const baseUrl = `http://localhost:${config.port}`;
       console.log(`Auth Service listening on port ${config.port}`);
+      console.log(`Auth Service URL: ${baseUrl}`);
+      console.log(`Auth Service Swagger UI: ${baseUrl}/api-docs`);
+      console.log(`Auth Service Swagger JSON: ${baseUrl}/swagger.json`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);

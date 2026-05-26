@@ -36,6 +36,7 @@ test('api-gateway exposes health and auth proxy catch-all routes', () => {
 	const app = createGatewayApp();
 
 	assert.deepEqual(collectRoutes(app), [
+		{ path: '/swagger.json', methods: [ 'get' ] },
 		{ path: '/health', methods: [ 'get' ] },
 		{ path: '/v1/auth/*', methods: [ 'delete', 'get', 'patch', 'post', 'put' ] }
 	]);
@@ -164,4 +165,3 @@ test('api-gateway proxies requests to the configured target service', async () =
 		await new Promise((resolve) => targetServer.close(resolve));
 	}
 });
-
