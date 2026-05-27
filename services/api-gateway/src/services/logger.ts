@@ -1,3 +1,3 @@
 import { createLogger } from '@school/common';
 
-export const logger = createLogger('api-gateway');
+export const logger: ReturnType<typeof createLogger> = createLogger('api-gateway');

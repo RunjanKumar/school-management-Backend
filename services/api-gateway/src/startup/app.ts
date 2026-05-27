@@ -16,7 +16,8 @@ app.get('/services/health', async (_req: Request, res: Response) => {
 		const authCheck = await axios.get(`${config.services.auth}/health`, { timeout: 2000 }).catch(() => null);
 		healthStatus.auth = authCheck?.status === 200 ? 'up' : 'down';
 
-		// Additional service checks can be added here once they are running
+		const schoolCheck = await axios.get(`${config.services.school}/health`, { timeout: 2000 }).catch(() => null);
+		healthStatus.school = schoolCheck?.status === 200 ? 'up' : 'down';
 	} catch (error) {
 		logger.error('Health check failed for some services', { error });
 	}

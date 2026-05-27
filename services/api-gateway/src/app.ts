@@ -5,10 +5,15 @@ import swaggerUi from 'swagger-ui-express';
 import config from './config';
 import { gatewaySwaggerDocument } from './docs/swagger';
 import { createAuthProxyMiddleware } from './routes/authProxy';
+import { createSchoolProxyMiddleware } from './routes/schoolProxy';
 import { errorHandler } from './middleware/errorHandler';
+import { authMiddleware } from './middleware/authMiddleware';
+import { roleGuard } from './middleware/roleGuard';
+import { Constants } from '@school/common';
 
 type GatewayAppOptions = {
 	authServiceUrl?: string;
+	schoolServiceUrl?: string;
 	rateLimitWindowMs?: number;
 	rateLimitMaxRequests?: number;
 };
@@ -48,6 +53,21 @@ export function createGatewayApp(options: GatewayAppOptions = {}) {
 		.patch(authProxyMiddleware)
 		.post(authProxyMiddleware)
 		.put(authProxyMiddleware);
+
+	const schoolProxyMiddleware = createSchoolProxyMiddleware(options.schoolServiceUrl);
+	const superAdminOnly = roleGuard([ Constants.USER_ROLES.SUPER_ADMIN ]);
+	app
+		.route('/v1/schools')
+		.get(authMiddleware, superAdminOnly, schoolProxyMiddleware)
+		.post(authMiddleware, superAdminOnly, schoolProxyMiddleware);
+	app
+		.route('/v1/schools/*')
+		.delete(authMiddleware, superAdminOnly, schoolProxyMiddleware)
+		.get(authMiddleware, superAdminOnly, schoolProxyMiddleware)
+		.patch(authMiddleware, superAdminOnly, schoolProxyMiddleware)
+		.post(authMiddleware, superAdminOnly, schoolProxyMiddleware)
+		.put(authMiddleware, superAdminOnly, schoolProxyMiddleware);
+
 	app.use(errorHandler);
 
 	return app;
