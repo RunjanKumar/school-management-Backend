@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { forgotPassword, googleAuth, login, logout, me, refresh, resetPassword } from '../controllers/authController';
+import { createSchoolAdmin, forgotPassword, googleAuth, login, logout, me, refresh, resetPassword, updateMe } from '../controllers/authController';
 import { asyncHandler, validateBody } from '../utils/routeUtils';
 import Joi from 'joi';
 
@@ -36,6 +36,16 @@ const logoutSchema = Joi.object({
 	refreshToken: Joi.string().optional()
 });
 
+const createSchoolAdminSchema = Joi.object({
+	name: Joi.string().trim().min(2).max(100).optional(),
+	email: Joi.string().email().required(),
+	password: Joi.string().min(8).required()
+});
+
+const updateMeSchema = Joi.object({
+	name: Joi.string().trim().min(2).max(100).required()
+});
+
 router.post('/login', validateBody(loginSchema), asyncHandler(login));
 router.post('/google', validateBody(googleLoginSchema), asyncHandler(googleAuth));
 router.post('/forgot-password', validateBody(forgotPasswordSchema), asyncHandler(forgotPassword));
@@ -43,5 +53,7 @@ router.post('/reset-password', validateBody(resetPasswordSchema), asyncHandler(r
 router.post('/refresh', validateBody(refreshSchema), asyncHandler(refresh));
 router.post('/logout', validateBody(logoutSchema), asyncHandler(logout));
 router.get('/me', asyncHandler(me));
+router.put('/me', validateBody(updateMeSchema), asyncHandler(updateMe));
+router.post('/school-admins', validateBody(createSchoolAdminSchema), asyncHandler(createSchoolAdmin));
 
 export default router;

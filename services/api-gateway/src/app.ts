@@ -46,6 +46,11 @@ export function createGatewayApp(options: GatewayAppOptions = {}) {
 	});
 
 	const authProxyMiddleware = createAuthProxyMiddleware(options.authServiceUrl);
+	const superAdminOnly = roleGuard([ Constants.USER_ROLES.SUPER_ADMIN ]);
+	const schoolAdminOnly = roleGuard([ Constants.USER_ROLES.SCHOOL_ADMIN ]);
+	const schoolReaders = roleGuard([ Constants.USER_ROLES.SUPER_ADMIN, Constants.USER_ROLES.SCHOOL_ADMIN ]);
+
+	app.post('/v1/auth/school-admins', authMiddleware, superAdminOnly, authProxyMiddleware);
 	app
 		.route('/v1/auth/*')
 		.delete(authProxyMiddleware)
@@ -55,18 +60,17 @@ export function createGatewayApp(options: GatewayAppOptions = {}) {
 		.put(authProxyMiddleware);
 
 	const schoolProxyMiddleware = createSchoolProxyMiddleware(options.schoolServiceUrl);
-	const superAdminOnly = roleGuard([ Constants.USER_ROLES.SUPER_ADMIN ]);
 	app
 		.route('/v1/schools')
-		.get(authMiddleware, superAdminOnly, schoolProxyMiddleware)
-		.post(authMiddleware, superAdminOnly, schoolProxyMiddleware);
+		.get(authMiddleware, schoolReaders, schoolProxyMiddleware)
+		.post(authMiddleware, schoolAdminOnly, schoolProxyMiddleware);
 	app
 		.route('/v1/schools/*')
-		.delete(authMiddleware, superAdminOnly, schoolProxyMiddleware)
-		.get(authMiddleware, superAdminOnly, schoolProxyMiddleware)
-		.patch(authMiddleware, superAdminOnly, schoolProxyMiddleware)
-		.post(authMiddleware, superAdminOnly, schoolProxyMiddleware)
-		.put(authMiddleware, superAdminOnly, schoolProxyMiddleware);
+		.delete(authMiddleware, schoolAdminOnly, schoolProxyMiddleware)
+		.get(authMiddleware, schoolReaders, schoolProxyMiddleware)
+		.patch(authMiddleware, schoolAdminOnly, schoolProxyMiddleware)
+		.post(authMiddleware, schoolAdminOnly, schoolProxyMiddleware)
+		.put(authMiddleware, schoolAdminOnly, schoolProxyMiddleware);
 
 	app.use(errorHandler);
 

@@ -106,7 +106,7 @@ Based on your codebase at [src/](file:///d:/SCHOOL/school-management-backend/src
 
 - Auth Controller (new multi-role login)
 - Google Auth Service
-- Super Admin APIs (school CRUD)
+- Super Admin APIs (create school admins, read-only school visibility)
 - School Admin APIs (user creation)
 - Teacher/Parent/Student/Guest Controllers
 - Permission Service
@@ -250,11 +250,12 @@ graph TB
 
 | Endpoint | Method | Description |
 |---|---|---|
-| `/v1/schools` | POST | Create school (Super Admin) |
-| `/v1/schools` | GET | List schools |
-| `/v1/schools/:id` | GET | Get school details |
-| `/v1/schools/:id` | PUT | Update school |
-| `/v1/schools/:id/status` | PUT | Suspend/activate |
+| `/v1/auth/school-admins` | POST | Create school admin (Super Admin) |
+| `/v1/schools` | POST | Create school (School Admin) |
+| `/v1/schools` | GET | List schools (Super Admin read-only all; School Admin own schools) |
+| `/v1/schools/:id` | GET | Get school details (Super Admin read-only; School Admin own schools) |
+| `/v1/schools/:id` | PUT | Update school (School Admin own schools) |
+| `/v1/schools/:id/status` | PUT | Suspend/activate (School Admin own schools) |
 | `/v1/schools/code/:code` | GET | Get school by code |
 | `/v1/internal/schools/:id/status` | GET | **Internal only** — check if school is active |
 

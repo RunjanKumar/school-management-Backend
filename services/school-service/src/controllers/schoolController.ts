@@ -9,6 +9,18 @@ const getRequesterId = (request: Request) => {
 	return Array.isArray(userId) ? userId[0] : userId;
 };
 
+const getRequesterRole = (request: Request) => {
+	const role = request.headers['x-user-role'];
+	return Array.isArray(role) ? role[0] : role;
+};
+
+const forbiddenResponse = (message: string) => createErrorResponse(message, Constants.ERROR_TYPES.FORBIDDEN);
+
+const ensureRole = (request: Request, allowedRoles: string[]) => {
+	const role = getRequesterRole(request);
+	return role && allowedRoles.includes(role) ? role : undefined;
+};
+
 const getPagination = (request: Request) => {
 	const page = Math.max(Number(request.query.page || 1), 1);
 	const limit = Math.min(Math.max(Number(request.query.limit || 20), 1), 100);
@@ -19,6 +31,12 @@ const schoolNotFoundResponse = () => createErrorResponse('School not found.', Co
 
 export async function createSchool(request: Request, response: Response) {
 	const createdBy = getRequesterId(request);
+	const role = ensureRole(request, [ Constants.USER_ROLES.SCHOOL_ADMIN ]);
+
+	if (!role) {
+		const responseObject = forbiddenResponse('Only school admin can create schools.');
+		return response.status(responseObject.statusCode).json(responseObject);
+	}
 
 	if (!createdBy || !mongoose.Types.ObjectId.isValid(createdBy)) {
 		logger.warn('Create school rejected because gateway user header was missing or invalid', { createdBy });
@@ -51,8 +69,24 @@ export async function createSchool(request: Request, response: Response) {
 }
 
 export async function listSchools(request: Request, response: Response) {
+	const requesterId = getRequesterId(request);
+	const role = ensureRole(request, [ Constants.USER_ROLES.SUPER_ADMIN, Constants.USER_ROLES.SCHOOL_ADMIN ]);
+
+	if (!role) {
+		const responseObject = forbiddenResponse('You are not allowed to read schools.');
+		return response.status(responseObject.statusCode).json(responseObject);
+	}
+
 	const { page, limit, skip } = getPagination(request);
 	const filter: Record<string, unknown> = { isDeleted: false };
+
+	if (role === Constants.USER_ROLES.SCHOOL_ADMIN) {
+		if (!requesterId || !mongoose.Types.ObjectId.isValid(requesterId)) {
+			const responseObject = createErrorResponse(Constants.RESPONSE_MESSAGES.UNAUTHORIZED, Constants.ERROR_TYPES.UNAUTHORIZED);
+			return response.status(responseObject.statusCode).json(responseObject);
+		}
+		filter.createdBy = new mongoose.Types.ObjectId(requesterId);
+	}
 
 	if (request.query.status) {
 		filter.status = request.query.status;
@@ -87,6 +121,13 @@ export async function listSchools(request: Request, response: Response) {
 
 export async function getSchoolById(request: Request, response: Response) {
 	const { id } = request.params;
+	const requesterId = getRequesterId(request);
+	const role = ensureRole(request, [ Constants.USER_ROLES.SUPER_ADMIN, Constants.USER_ROLES.SCHOOL_ADMIN ]);
+
+	if (!role) {
+		const responseObject = forbiddenResponse('You are not allowed to read this school.');
+		return response.status(responseObject.statusCode).json(responseObject);
+	}
 
 	if (!mongoose.Types.ObjectId.isValid(id)) {
 		const responseObject = createErrorResponse('Invalid school id.', Constants.ERROR_TYPES.BAD_REQUEST);
@@ -94,7 +135,11 @@ export async function getSchoolById(request: Request, response: Response) {
 	}
 
 	logger.info('Fetching school by id', { schoolId: id });
-	const school = await schoolModel.findOne({ _id: id, isDeleted: false });
+	const filter: Record<string, unknown> = { _id: id, isDeleted: false };
+	if (role === Constants.USER_ROLES.SCHOOL_ADMIN) {
+		filter.createdBy = requesterId;
+	}
+	const school = await schoolModel.findOne(filter);
 
 	if (!school) {
 		const responseObject = schoolNotFoundResponse();
@@ -107,9 +152,20 @@ export async function getSchoolById(request: Request, response: Response) {
 
 export async function getSchoolByCode(request: Request, response: Response) {
 	const code = request.params.code.toUpperCase();
+	const requesterId = getRequesterId(request);
+	const role = ensureRole(request, [ Constants.USER_ROLES.SUPER_ADMIN, Constants.USER_ROLES.SCHOOL_ADMIN ]);
+
+	if (!role) {
+		const responseObject = forbiddenResponse('You are not allowed to read this school.');
+		return response.status(responseObject.statusCode).json(responseObject);
+	}
 
 	logger.info('Fetching school by code', { code });
-	const school = await schoolModel.findOne({ code, isDeleted: false });
+	const filter: Record<string, unknown> = { code, isDeleted: false };
+	if (role === Constants.USER_ROLES.SCHOOL_ADMIN) {
+		filter.createdBy = requesterId;
+	}
+	const school = await schoolModel.findOne(filter);
 
 	if (!school) {
 		const responseObject = schoolNotFoundResponse();
@@ -122,6 +178,13 @@ export async function getSchoolByCode(request: Request, response: Response) {
 
 export async function updateSchool(request: Request, response: Response) {
 	const { id } = request.params;
+	const requesterId = getRequesterId(request);
+	const role = ensureRole(request, [ Constants.USER_ROLES.SCHOOL_ADMIN ]);
+
+	if (!role) {
+		const responseObject = forbiddenResponse('Only school admin can update schools.');
+		return response.status(responseObject.statusCode).json(responseObject);
+	}
 
 	if (!mongoose.Types.ObjectId.isValid(id)) {
 		const responseObject = createErrorResponse('Invalid school id.', Constants.ERROR_TYPES.BAD_REQUEST);
@@ -137,7 +200,7 @@ export async function updateSchool(request: Request, response: Response) {
 
 	try {
 		const school = await schoolModel.findOneAndUpdate(
-			{ _id: id, isDeleted: false },
+			{ _id: id, isDeleted: false, createdBy: requesterId },
 			{ $set: updatePayload },
 			{ new: true, runValidators: true }
 		);
@@ -163,6 +226,13 @@ export async function updateSchool(request: Request, response: Response) {
 export async function updateSchoolStatus(request: Request, response: Response) {
 	const { id } = request.params;
 	const { status } = request.body;
+	const requesterId = getRequesterId(request);
+	const role = ensureRole(request, [ Constants.USER_ROLES.SCHOOL_ADMIN ]);
+
+	if (!role) {
+		const responseObject = forbiddenResponse('Only school admin can update school status.');
+		return response.status(responseObject.statusCode).json(responseObject);
+	}
 
 	if (!mongoose.Types.ObjectId.isValid(id)) {
 		const responseObject = createErrorResponse('Invalid school id.', Constants.ERROR_TYPES.BAD_REQUEST);
@@ -171,7 +241,7 @@ export async function updateSchoolStatus(request: Request, response: Response) {
 
 	logger.info('Updating school status', { schoolId: id, status });
 	const school = await schoolModel.findOneAndUpdate(
-		{ _id: id, isDeleted: false },
+		{ _id: id, isDeleted: false, createdBy: requesterId },
 		{ $set: { status } },
 		{ new: true, runValidators: true }
 	);

@@ -38,6 +38,7 @@ test('api-gateway exposes health, auth proxy, and school proxy routes', () => {
 	assert.deepEqual(collectRoutes(app), [
 		{ path: '/swagger.json', methods: [ 'get' ] },
 		{ path: '/health', methods: [ 'get' ] },
+		{ path: '/v1/auth/school-admins', methods: [ 'post' ] },
 		{ path: '/v1/auth/*', methods: [ 'delete', 'get', 'patch', 'post', 'put' ] },
 		{ path: '/v1/schools', methods: [ 'get', 'post' ] },
 		{ path: '/v1/schools/*', methods: [ 'delete', 'get', 'patch', 'post', 'put' ] }

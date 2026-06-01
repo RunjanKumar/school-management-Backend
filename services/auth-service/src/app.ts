@@ -2,7 +2,7 @@ import cors from 'cors';
 import express, { Request, Response } from 'express';
 import Joi from 'joi';
 import swaggerUi from 'swagger-ui-express';
-import { forgotPassword, googleAuth, login, logout, me, refresh, resetPassword } from './controllers/authController';
+import { createSchoolAdmin, forgotPassword, googleAuth, login, logout, me, refresh, resetPassword, updateMe } from './controllers/authController';
 import { authSwaggerDocument } from './docs/swagger';
 import { errorHandler } from './middleware/errorHandler';
 import { internalAuth } from './middleware/internalAuth';
@@ -40,6 +40,16 @@ const logoutSchema = Joi.object({
 	refreshToken: Joi.string().optional()
 });
 
+const createSchoolAdminSchema = Joi.object({
+	name: Joi.string().trim().min(2).max(100).optional(),
+	email: Joi.string().email().required(),
+	password: Joi.string().min(8).required()
+});
+
+const updateMeSchema = Joi.object({
+	name: Joi.string().trim().min(2).max(100).required()
+});
+
 export function createAuthApp() {
 	const app = express();
 
@@ -68,6 +78,8 @@ export function createAuthApp() {
 	app.post('/v1/auth/refresh', validateBody(refreshSchema), asyncHandler(refresh));
 	app.post('/v1/auth/logout', validateBody(logoutSchema), asyncHandler(logout));
 	app.get('/v1/auth/me', asyncHandler(me));
+	app.put('/v1/auth/me', validateBody(updateMeSchema), asyncHandler(updateMe));
+	app.post('/v1/auth/school-admins', validateBody(createSchoolAdminSchema), asyncHandler(createSchoolAdmin));
 	app.post(
 		'/v1/internal/auth/validate',
 		internalAuth,

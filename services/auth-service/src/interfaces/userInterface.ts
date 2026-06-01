@@ -11,6 +11,7 @@ export interface UserInterface extends Document {
 	updatedAt: Date;
 	email: string;
 	normalizedEmail: string;
+	name?: string;
 	passwordHash?: string;
 	role: string;
 	schoolId?: Types.ObjectId;

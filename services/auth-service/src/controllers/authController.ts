@@ -143,6 +143,54 @@ export const login = async (req: Request, res: Response) => {
 	return res.status(responseObject.statusCode).json(responseObject);
 };
 
+export const createSchoolAdmin = async (req: Request, res: Response) => {
+	const token = getBearerToken(req);
+	if (!token) {
+		return sendError(res, 401, 'Missing authorization token.');
+	}
+
+	const validation = await verifyTokenAndSession(token);
+	if (!validation.valid) {
+		return sendError(res, 401, validation.message);
+	}
+
+	if (validation.payload.role !== Constants.USER_ROLES.SUPER_ADMIN) {
+		return sendError(res, 403, 'Only super admin can create school admins.', Constants.ERROR_TYPES.FORBIDDEN);
+	}
+
+	const { email, password, name } = req.body;
+	const normalizedEmail = normalizeEmail(email);
+
+	const existingUser = await User.findOne({ normalizedEmail, isDeleted: false });
+	if (existingUser) {
+		const responseObject = createErrorResponse('A user with this email already exists.', Constants.ERROR_TYPES.ALREADY_EXISTS);
+		return res.status(responseObject.statusCode).json(responseObject);
+	}
+
+	const passwordHash = await bcrypt.hash(password, 10);
+	const user = await User.create({
+		email: normalizedEmail,
+		normalizedEmail,
+		name,
+		passwordHash,
+		role: Constants.USER_ROLES.SCHOOL_ADMIN,
+		authProviders: { password: true, google: false },
+		emailVerified: true,
+		status: Constants.USER_STATUS.ACTIVE,
+		isDeleted: false
+	});
+
+	logger.info('School admin created by super admin', {
+		userId: user._id.toString(),
+		createdBy: validation.payload.userId
+	});
+
+	const responseObject = createSuccessResponse('School admin created successfully.', {
+		user: buildUserSummary(user)
+	});
+	return res.status(201).json(responseObject);
+};
+
 export const googleAuth = async (req: Request, res: Response) => {
 	const { idToken, role, schoolCode, deviceId } = req.body;
 	const claims = await verifyGoogleToken(idToken);
@@ -289,6 +337,44 @@ export const me = async (req: Request, res: Response) => {
 	const responseObject = createSuccessResponse('Profile fetched successfully.', {
 		user: buildUserSummary(user),
 		sessionId: validation.payload.sessionId
+	});
+	return res.status(responseObject.statusCode).json(responseObject);
+};
+
+export const updateMe = async (req: Request, res: Response) => {
+	const token = getBearerToken(req);
+	if (!token) {
+		return sendError(res, 401, 'Missing authorization token.');
+	}
+
+	const validation = await verifyTokenAndSession(token);
+	if (!validation.valid) {
+		return sendError(res, 401, validation.message);
+	}
+
+	const allowedRoles = new Set([ Constants.USER_ROLES.SUPER_ADMIN, Constants.USER_ROLES.SCHOOL_ADMIN ]);
+	if (!allowedRoles.has(validation.payload.role)) {
+		return sendError(res, 403, 'Only super admin and school admin can update basic profile data.', Constants.ERROR_TYPES.FORBIDDEN);
+	}
+
+	const updatePayload: Record<string, unknown> = {};
+	if (Object.prototype.hasOwnProperty.call(req.body, 'name')) {
+		updatePayload.name = req.body.name;
+	}
+
+	const user = await User.findOneAndUpdate(
+		{ _id: validation.payload.userId, isDeleted: false },
+		{ $set: updatePayload },
+		{ new: true, runValidators: true }
+	);
+
+	if (!user) {
+		return sendError(res, 404, 'User not found.', Constants.ERROR_TYPES.DATA_NOT_FOUND);
+	}
+
+	logger.info('Basic profile updated', { userId: user._id.toString(), role: user.role, fields: Object.keys(updatePayload) });
+	const responseObject = createSuccessResponse('Profile updated successfully.', {
+		user: buildUserSummary(user)
 	});
 	return res.status(responseObject.statusCode).json(responseObject);
 };

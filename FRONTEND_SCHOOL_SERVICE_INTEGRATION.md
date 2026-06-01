@@ -28,15 +28,21 @@ Send the access token from login:
 Authorization: Bearer ACCESS_TOKEN
 ```
 
-Only `super_admin` can create, list, view, update, activate, inactivate, or suspend schools.
+School APIs are role-scoped:
 
-Allowed role:
+```txt
+super_admin  -> read-only list/view of all schools
+school_admin -> create schools and manage only schools they created
+```
+
+Allowed roles:
 
 ```txt
 super_admin
+school_admin
 ```
 
-If the user is not logged in or not `super_admin`, the gateway returns `401`.
+If the user is not logged in or the role is not allowed for that action, the gateway returns `401`.
 
 ## Status Values
 
@@ -123,6 +129,8 @@ PUT  /v1/schools/:id/status
 ```
 
 ## Create School
+
+Role: `school_admin` only. Super admin creates the school admin first, then that school admin logs in and creates the school.
 
 ```http
 POST http://localhost:3000/v1/schools
@@ -216,6 +224,8 @@ Duplicate code error:
 ```
 
 ## List Schools
+
+Role: `super_admin` can read all schools. Role: `school_admin` can read only schools they created.
 
 ```http
 GET http://localhost:3000/v1/schools
@@ -331,6 +341,8 @@ Success response is the same as Get School By Id.
 
 ## Update School
 
+Role: `school_admin` only, limited to schools they created.
+
 ```http
 PUT http://localhost:3000/v1/schools/6657770fdc1e7c6151878001
 Authorization: Bearer ACCESS_TOKEN
@@ -380,6 +392,8 @@ Success:
 ## Update School Status
 
 Use this for Activate, Inactivate, or Suspend actions.
+
+Role: `school_admin` only, limited to schools they created.
 
 ```http
 PUT http://localhost:3000/v1/schools/6657770fdc1e7c6151878001/status
@@ -520,19 +534,20 @@ export function updateSchoolStatus(id, status) {
 
 ```txt
 /super-admin/schools
-/super-admin/schools/new
 /super-admin/schools/:id
-/super-admin/schools/:id/edit
+/school-admin/schools
+/school-admin/schools/new
+/school-admin/schools/:id
+/school-admin/schools/:id/edit
 ```
 
 Minimum UI:
 
 ```txt
-School list with search, status filter, pagination
-Create school form
-Edit school form
-School details page or drawer
-Status action confirmation modal
+Super admin school list with search, status filter, pagination, and read-only detail view
+School admin create school form
+School admin edit school form
+School admin status action confirmation modal
 Error toast using backend message
 Loading and empty states
 ```

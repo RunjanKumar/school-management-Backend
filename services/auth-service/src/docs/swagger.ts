@@ -3,7 +3,7 @@ export const authSwaggerDocument = {
 	info: {
 		title: 'School Management Auth Service',
 		version: '1.0.0',
-		description: 'Authentication APIs for password login, Google login, session refresh, logout, and password reset.'
+		description: 'Authentication APIs for password login, Google login, session refresh, logout, profile update, and password reset.'
 	},
 	servers: [
 		{
@@ -65,7 +65,8 @@ export const authSwaggerDocument = {
 					},
 					schoolId: { type: 'string', nullable: true, example: null },
 					profileRef: { type: 'string', nullable: true, example: null },
-					profileModel: { type: 'string', nullable: true, example: null }
+					profileModel: { type: 'string', nullable: true, example: null },
+					name: { type: 'string', example: 'Root Admin' }
 				}
 			},
 			LoginRequest: {
@@ -135,6 +136,22 @@ export const authSwaggerDocument = {
 					password: { type: 'string', format: 'password', example: 'NewPassword@123' }
 				}
 			},
+			UpdateMeRequest: {
+				type: 'object',
+				required: [ 'name' ],
+				properties: {
+					name: { type: 'string', example: 'Updated Admin Name' }
+				}
+			},
+			CreateSchoolAdminRequest: {
+				type: 'object',
+				required: [ 'email', 'password' ],
+				properties: {
+					name: { type: 'string', example: 'Green Valley Admin' },
+					email: { type: 'string', format: 'email', example: 'admin@gvs.example' },
+					password: { type: 'string', format: 'password', example: 'SchoolAdmin@123' }
+				}
+			},
 			InternalValidateRequest: {
 				type: 'object',
 				required: [ 'token' ],
@@ -198,12 +215,26 @@ export const authSwaggerDocument = {
 					'200': { description: 'Profile fetched successfully', content: { 'application/json': { schema: { $ref: '#/components/schemas/ApiSuccess' } } } },
 					'401': { description: 'Missing or invalid token' }
 				}
+			},
+			put: {
+				tags: [ 'Auth' ],
+				summary: 'Update current user basic profile data. Super admin and school admin only.',
+				security: [ { bearerAuth: [] } ],
+				requestBody: {
+					required: true,
+					content: { 'application/json': { schema: { $ref: '#/components/schemas/UpdateMeRequest' } } }
+				},
+				responses: {
+					'200': { description: 'Profile updated successfully', content: { 'application/json': { schema: { $ref: '#/components/schemas/ApiSuccess' } } } },
+					'401': { description: 'Missing or invalid token' },
+					'403': { description: 'Only super admin and school admin can update basic profile data' }
+				}
 			}
 		},
 		'/v1/auth/logout': {
 			post: {
 				tags: [ 'Auth' ],
-				summary: 'Logout and revoke a session',
+				summary: 'Logout any logged-in user and revoke a session',
 				security: [ { bearerAuth: [] } ],
 				requestBody: {
 					required: false,
@@ -252,6 +283,22 @@ export const authSwaggerDocument = {
 				responses: {
 					'200': { description: 'Password reset successfully' },
 					'401': { description: 'Reset token is invalid or expired' }
+				}
+			}
+		},
+		'/v1/auth/school-admins': {
+			post: {
+				tags: [ 'Auth' ],
+				summary: 'Create a school admin. Super admin only.',
+				security: [ { bearerAuth: [] } ],
+				requestBody: {
+					required: true,
+					content: { 'application/json': { schema: { $ref: '#/components/schemas/CreateSchoolAdminRequest' } } }
+				},
+				responses: {
+					'201': { description: 'School admin created successfully' },
+					'401': { description: 'Missing or invalid token' },
+					'403': { description: 'Only super admin can create school admins' }
 				}
 			}
 		},

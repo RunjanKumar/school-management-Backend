@@ -22,10 +22,12 @@ http://localhost:3000/api-docs
 POST /v1/auth/login
 POST /v1/auth/google
 GET  /v1/auth/me
+PUT  /v1/auth/me
 POST /v1/auth/logout
 POST /v1/auth/refresh
 POST /v1/auth/forgot-password
 POST /v1/auth/reset-password
+POST /v1/auth/school-admins
 ```
 
 ## Role Values
@@ -310,6 +312,18 @@ API call gets 401
 
 ## Logout
 
+This logout API works for every logged-in role:
+
+```txt
+super_admin
+school_admin
+school_operator
+teacher
+parent
+student
+guest
+```
+
 Request:
 
 ```http
@@ -333,6 +347,46 @@ token
 refreshToken
 user
 ```
+
+## Update Basic Profile
+
+Only `super_admin` and `school_admin` can update basic auth profile data right now.
+
+```http
+PUT http://localhost:3000/v1/auth/me
+Authorization: Bearer ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Body:
+
+```json
+{
+  "name": "Updated Admin Name"
+}
+```
+
+Success response:
+
+```json
+{
+  "statusCode": 200,
+  "status": true,
+  "message": "Profile updated successfully.",
+  "type": "SUCCESS",
+  "data": {
+    "user": {
+      "_id": "user-id",
+      "email": "admin@school.com",
+      "role": "school_admin",
+      "schoolId": null,
+      "name": "Updated Admin Name"
+    }
+  }
+}
+```
+
+Frontend should replace stored `user` with `data.user`.
 
 ## Forgot Password
 
@@ -392,6 +446,34 @@ parent           → /parent/dashboard
 student          → /student/dashboard
 guest            → /guest
 ```
+
+For role-based admin/school UI behavior, see:
+
+```txt
+FRONTEND_ROLE_BASED_ADMIN_FLOW.md
+```
+
+## Super Admin Creates School Admin
+
+Only `super_admin` can call this endpoint.
+
+```http
+POST http://localhost:3000/v1/auth/school-admins
+Authorization: Bearer ACCESS_TOKEN
+Content-Type: application/json
+```
+
+Body:
+
+```json
+{
+  "name": "Green Valley Admin",
+  "email": "admin@gvs.example",
+  "password": "SchoolAdmin@123"
+}
+```
+
+The created user has role `school_admin`. That school admin then logs in and creates schools from the school admin UI.
 
 ## Error Handling
 

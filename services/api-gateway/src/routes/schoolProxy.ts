@@ -24,13 +24,18 @@ export function createSchoolProxyMiddleware(schoolServiceUrl = config.services.s
 export function createSchoolProxyRouter(schoolServiceUrl = config.services.school) {
 	const router = Router();
 
-	// School routes are protected at the gateway; the service trusts these forwarded identity headers.
-	router.use(
-		'/',
-		authMiddleware,
-		roleGuard([ Constants.USER_ROLES.SUPER_ADMIN ]),
-		createSchoolProxyMiddleware(schoolServiceUrl)
-	);
+	const schoolProxyMiddleware = createSchoolProxyMiddleware(schoolServiceUrl);
+	const schoolReaders = roleGuard([ Constants.USER_ROLES.SUPER_ADMIN, Constants.USER_ROLES.SCHOOL_ADMIN ]);
+	const schoolAdminOnly = roleGuard([ Constants.USER_ROLES.SCHOOL_ADMIN ]);
+
+	router.route('/').get(authMiddleware, schoolReaders, schoolProxyMiddleware).post(authMiddleware, schoolAdminOnly, schoolProxyMiddleware);
+	router
+		.route('/*')
+		.delete(authMiddleware, schoolAdminOnly, schoolProxyMiddleware)
+		.get(authMiddleware, schoolReaders, schoolProxyMiddleware)
+		.patch(authMiddleware, schoolAdminOnly, schoolProxyMiddleware)
+		.post(authMiddleware, schoolAdminOnly, schoolProxyMiddleware)
+		.put(authMiddleware, schoolAdminOnly, schoolProxyMiddleware);
 
 	return router;
 }

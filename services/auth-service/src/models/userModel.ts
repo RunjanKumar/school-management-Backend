@@ -30,6 +30,10 @@ const userSchema: Schema<UserInterface> = new Schema(
 			lowercase: true,
 			trim: true
 		},
+		name: {
+			type: String,
+			trim: true
+		},
 		passwordHash: {
 			type: String,
 			select: false
@@ -104,7 +108,15 @@ userSchema.pre('validate', function validateUser(next) {
 		this.invalidate('schoolId', 'Super admin must not have a schoolId.');
 	}
 
-	if (this.role && this.role !== Constants.USER_ROLES.SUPER_ADMIN && this.role !== Constants.USER_ROLES.GUEST && !this.schoolId) {
+	if (
+		this.role &&
+		![
+			Constants.USER_ROLES.SUPER_ADMIN,
+			Constants.USER_ROLES.SCHOOL_ADMIN,
+			Constants.USER_ROLES.GUEST
+		].includes(this.role) &&
+		!this.schoolId
+	) {
 		this.invalidate('schoolId', 'schoolId is required for school-scoped users.');
 	}
 

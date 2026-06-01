@@ -43,6 +43,22 @@ test('auth-service owns login identity, session, and audit collections', async (
 	assert.equal(loginAuditModel.schema.path('loginMethod').enumValues.includes(Constants.AUTH_PROVIDERS.PASSWORD), true);
 });
 
+test('auth-service supports super admin creating an unassigned school admin', async () => {
+	const schoolAdmin = new userModel({
+		name: 'School Creator',
+		email: ' Creator@Example.COM ',
+		passwordHash: 'hashed-password',
+		role: Constants.USER_ROLES.SCHOOL_ADMIN,
+		authProviders: { password: true, google: false },
+		status: Constants.USER_STATUS.ACTIVE
+	});
+	await schoolAdmin.validate();
+
+	assert.equal(schoolAdmin.email, 'creator@example.com');
+	assert.equal(schoolAdmin.name, 'School Creator');
+	assert.equal(schoolAdmin.schoolId, undefined);
+});
+
 test('auth-service seeds super admin credentials without school scope', () => {
 	const payload = buildSuperAdminUserPayload(
 		{
@@ -99,6 +115,8 @@ test('auth-service app exposes public auth routes and internal validation route'
 		{ path: '/v1/auth/refresh', methods: [ 'post' ] },
 		{ path: '/v1/auth/logout', methods: [ 'post' ] },
 		{ path: '/v1/auth/me', methods: [ 'get' ] },
+		{ path: '/v1/auth/me', methods: [ 'put' ] },
+		{ path: '/v1/auth/school-admins', methods: [ 'post' ] },
 		{ path: '/v1/internal/auth/validate', methods: [ 'post' ] }
 	]);
 });
