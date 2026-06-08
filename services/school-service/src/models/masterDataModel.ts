@@ -1,7 +1,6 @@
 import mongoose, { Schema } from 'mongoose';
 import { MasterDataInterface } from '../interfaces/masterDataInterface';
-import { MASTER_DATA } from '@common/constants/masterDataModel';
-console.log('MASTER_DATA:', MASTER_DATA);
+import { MASTER_DATA } from '@school/common';
 
 const masterDataSchema: Schema<MasterDataInterface> = new Schema(
 	{

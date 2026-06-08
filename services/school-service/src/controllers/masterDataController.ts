@@ -1,10 +1,8 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
-import { Constants, createErrorResponse, createSuccessResponse } from '@school/common';
+import { Constants, createErrorResponse, createSuccessResponse, MASTER_DATA } from '@school/common';
 import masterDataModel from '../models/masterDataModel';
 import { logger } from '../services/logger';
-import { MASTER_DATA } from '@common/constants/masterDataModel';
-console.log('MASTER_DATA:', MASTER_DATA);
 const VALID_TYPES = Object.values(MASTER_DATA);
 
 //
