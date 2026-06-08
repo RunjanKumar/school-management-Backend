@@ -6,6 +6,7 @@ import config from './config';
 import { gatewaySwaggerDocument } from './docs/swagger';
 import { createAuthProxyMiddleware } from './routes/authProxy';
 import { createSchoolProxyMiddleware } from './routes/schoolProxy';
+import { createMasterDataProxyMiddleware } from './routes/masterDataProxy';
 import { errorHandler } from './middleware/errorHandler';
 import { authMiddleware } from './middleware/authMiddleware';
 import { roleGuard } from './middleware/roleGuard';
@@ -71,6 +72,20 @@ export function createGatewayApp(options: GatewayAppOptions = {}) {
 		.patch(authMiddleware, schoolAdminOnly, schoolProxyMiddleware)
 		.post(authMiddleware, schoolAdminOnly, schoolProxyMiddleware)
 		.put(authMiddleware, schoolAdminOnly, schoolProxyMiddleware);
+
+	// ── Master Data routes (proxied to school-service) ──
+	const masterDataProxy = createMasterDataProxyMiddleware(options.schoolServiceUrl);
+	const masterDataReaders = roleGuard([ Constants.USER_ROLES.SUPER_ADMIN, Constants.USER_ROLES.SCHOOL_ADMIN ]);
+	app
+		.route('/v1/master-data')
+		.get(authMiddleware, masterDataReaders, masterDataProxy)
+		.post(authMiddleware, superAdminOnly, masterDataProxy);
+	app
+		.route('/v1/master-data/*')
+		.delete(authMiddleware, superAdminOnly, masterDataProxy)
+		.get(authMiddleware, masterDataReaders, masterDataProxy)
+		.patch(authMiddleware, superAdminOnly, masterDataProxy)
+		.put(authMiddleware, superAdminOnly, masterDataProxy);
 
 	app.use(errorHandler);
 
